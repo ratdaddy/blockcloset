@@ -14,6 +14,7 @@ Only ADRs in the **Adopted** state appear here.
 |-------|-------|----------------|---------|
 | [0001](0001-adr-process-and-template-usage.md) | ADR Process and Template Usage | Complete | Defines how ADRs are created, maintained, and used by humans and AI agents. |
 | [0002](0002-external-api-s3-compatible-http-subset.md) | External API: S3-Compatible HTTP Subset | None | Specifies the design and implementation of an S3-compatible HTTP API for external access. |
+| [0003](0003-unit-and-routing-testing-for-go-http-services.md) | Unit and Routing Testing for Go HTTP Services | Partial | Outlines the testing strategy for Go HTTP services, including unit tests and routing tests. |
 
 ---
 
