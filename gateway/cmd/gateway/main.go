@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	buildHandler   = func() http.Handler { return httpapi.NewStdlibRouter() }
+	buildHandler   = func() http.Handler { return httpapi.NewRouter(httpapi.NewHandlers()) }
 	listenAndServe = http.ListenAndServe
 )
 
