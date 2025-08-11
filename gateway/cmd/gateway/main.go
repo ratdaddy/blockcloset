@@ -3,26 +3,20 @@ package main
 import (
 	"log"
 	"net/http"
+
+	"github.com/ratdaddy/blockcloset/gateway/internal/httpapi"
 )
 
-func newMux() *http.ServeMux {
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodPut && r.URL.Path != "/" {
-			w.Header().Set("Location", r.URL.Path)
-			w.WriteHeader(http.StatusCreated)
-			return
-		}
-		http.NotFound(w, r)
-	})
-	return mux
-}
+var (
+	buildHandler   = func() http.Handler { return httpapi.NewStdlibRouter() }
+	listenAndServe = http.ListenAndServe
+)
 
 func main() {
-	mux := newMux()
+	h := buildHandler()
 	addr := ":8080"
 	log.Printf("gateway listening on %s", addr)
-	if err := http.ListenAndServe(addr, mux); err != nil {
+	if err := listenAndServe(addr, h); err != nil {
 		log.Fatal(err)
 	}
 }
