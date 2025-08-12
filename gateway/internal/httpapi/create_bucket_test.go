@@ -2,8 +2,10 @@ package httpapi_test
 
 import (
 	"context"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/go-chi/chi/v5"
@@ -18,19 +20,79 @@ func reqWithBucket(t *testing.T, method, name string) *http.Request {
 	return r.WithContext(context.WithValue(r.Context(), chi.RouteCtxKey, rctx))
 }
 
-func TestCreateBucket_SetsLocationAnd201(t *testing.T) {
+type stubValidator struct {
+	err   error
+	calls []string
+}
+
+func (s *stubValidator) ValidateBucketName(name string) error {
+	s.calls = append(s.calls, name)
+	return s.err
+}
+
+func TestCreateBucket_ValidationAndResponse(t *testing.T) {
 	t.Parallel()
 
-	h := httpapi.NewHandlers()
-	req := reqWithBucket(t, http.MethodPut, "my-bucket-123")
-	rec := httptest.NewRecorder()
-
-	h.CreateBucket(rec, req)
-
-	if rec.Code != http.StatusCreated {
-		t.Fatalf("status: got %d, want %d", rec.Code, http.StatusCreated)
+	type tc struct {
+		name         string
+		bucket       string
+		validatorErr error
+		wantStatus   int
+		wantLoc      string
+		wantBodySub  string
 	}
-	if got := rec.Header().Get("Location"); got != "/my-bucket-123" {
-		t.Fatalf("Location: got %q, want %q", got, "/my-bucket-123")
+
+	cases := []tc{
+		{
+			name:         "valid bucket -> 201 and Location",
+			bucket:       "my-bucket-123",
+			validatorErr: nil,
+			wantStatus:   http.StatusCreated,
+			wantLoc:      "/my-bucket-123",
+			wantBodySub:  "",
+		},
+		{
+			name:         "invalid bucket -> 400",
+			bucket:       "Bad!Name",
+			validatorErr: httpapi.ErrInvalidBucketName,
+			wantStatus:   http.StatusBadRequest,
+			wantLoc:      "",
+			wantBodySub:  httpapi.ErrInvalidBucketName.Error(),
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			v := &stubValidator{err: c.validatorErr}
+			h := &httpapi.Handlers{Validator: v}
+
+			req := reqWithBucket(t, http.MethodPut, c.bucket)
+			rec := httptest.NewRecorder()
+
+			h.CreateBucket(rec, req)
+
+			if len(v.calls) != 1 || v.calls[0] != c.bucket {
+				t.Fatalf("validator calls = %#v; want exactly [%q]", v.calls, c.bucket)
+			}
+
+			if rec.Code != c.wantStatus {
+				t.Fatalf("status: got %d, want %d", rec.Code, c.wantStatus)
+			}
+
+			if c.wantLoc != "" {
+				if got := rec.Header().Get("Location"); got != c.wantLoc {
+					t.Fatalf("Location: got %q, want %q", got, c.wantLoc)
+				}
+			} else if got := rec.Header().Get("Location"); got != "" {
+				t.Fatalf("unexpected Location header on error: %q", got)
+			}
+
+			if c.wantBodySub != "" {
+				body, _ := io.ReadAll(rec.Body)
+				if !strings.Contains(string(body), c.wantBodySub) {
+					t.Fatalf("body: expected substring %q, got %q", c.wantBodySub, string(body))
+				}
+			}
+		})
 	}
 }
