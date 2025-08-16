@@ -16,6 +16,8 @@ Only ADRs in the **Adopted** state appear here.
 | [0002](0002-external-api-s3-compatible-http-subset.md) | External API: S3-Compatible HTTP Subset | Partial | Specifies the design and implementation of an S3-compatible HTTP API for external access. |
 | [0003](0003-unit-and-routing-testing-for-go-http-services.md) | Unit and Routing Testing for Go HTTP Services | Complete | Outlines the testing strategy for Go HTTP services, including unit tests and routing tests. |
 | [0004](0004-adoption-of-chi-router-for-http-routing.md) | Adoption of Chi Router for HTTP Routing | Complete | Details the decision to use the Chi router for HTTP routing in Go services. |
+| [0005](0005-standardizing-environment-variable-for-application-runtime-mode.md) | Standardizing Environment Variable for Application Runtime Mode | Complete | Establishes a standard environment variable to define the application runtime mode (e.g., development, production). |
+| [0006](0006-structured-logging-with-slog-and-go-chi-httplog.md) | Structured Logging with slog and go-chi/httplog | Complete | Describes the adoption of structured logging using the slog package and integration with go-chi/httplog. |
 
 ---
 

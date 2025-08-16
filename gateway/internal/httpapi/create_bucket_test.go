@@ -9,7 +9,9 @@ import (
 	"testing"
 
 	"github.com/go-chi/chi/v5"
+
 	"github.com/ratdaddy/blockcloset/gateway/internal/httpapi"
+	_ "github.com/ratdaddy/blockcloset/gateway/internal/testutil"
 )
 
 func reqWithBucket(t *testing.T, method, name string) *http.Request {
