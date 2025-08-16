@@ -1,2 +1,6 @@
 github.com/go-chi/chi/v5 v5.2.2 h1:CMwsvRVTbXVytCk1Wd72Zy1LAsAh9GxMmSNWLHCG618=
 github.com/go-chi/chi/v5 v5.2.2/go.mod h1:L2yAIGWB3H+phAw1NxKwWM+7eUH/lU8pOMm5hHcoops=
+github.com/go-chi/httplog/v3 v3.2.2 h1:G0oYv3YYcikNjijArHFUlqfR78cQNh9fGT43i6StqVc=
+github.com/go-chi/httplog/v3 v3.2.2/go.mod h1:N/J1l5l1fozUrqIVuT8Z/HzNeSy8TF2EFyokPLe6y2w=
+github.com/lmittmann/tint v1.1.2 h1:2CQzrL6rslrsyjqLDwD11bZ5OpLBPU+g3G/r5LSfS8w=
+github.com/lmittmann/tint v1.1.2/go.mod h1:HIS3gSy7qNwGCj+5oRjAutErFBl4BzdQP6cJZ0NfMwE=

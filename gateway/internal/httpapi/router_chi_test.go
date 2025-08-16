@@ -6,7 +6,9 @@ import (
 	"testing"
 
 	"github.com/go-chi/chi/v5"
+
 	"github.com/ratdaddy/blockcloset/gateway/internal/httpapi"
+	_ "github.com/ratdaddy/blockcloset/gateway/internal/testutil"
 )
 
 type stubHandlers struct {
