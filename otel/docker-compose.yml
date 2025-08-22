@@ -1,0 +1,52 @@
+version: "3.9"
+services:
+  loki:
+    image: grafana/loki:latest
+    command: ["-config.file=/etc/loki/local-config.yaml"]
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./loki-local-config.yaml:/etc/loki/local-config.yaml:ro
+      - loki-data:/loki
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - ./provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - loki
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    command: ["--config=/etc/otelcol/config.yaml"]
+    ports:
+      - "5514:5514/udp"
+    volumes:
+      - ./otelcol-config.yaml:/etc/otelcol/config.yaml:ro
+    depends_on:
+      - loki
+
+  gateway:
+    image: gateway:dev
+    environment:
+      LOG_FORMAT: json
+      LOG_VERBOSITY: verbose
+    ports:
+      - "8080:8080"
+    logging:
+      driver: syslog
+      options:
+        syslog-address: "udp://127.0.0.1:5514"
+        syslog-format: "rfc5424micro"
+        tag: "gateway"
+        mode: "non-blocking"
+        max-buffer-size: "4m"
+    depends_on: [otel-collector]
+
+volumes:
+  loki-data: {}

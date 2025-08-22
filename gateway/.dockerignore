@@ -1,0 +1,9 @@
+.git
+**/*.log
+**/tmp
+bin
+dist
+vendor
+node_modules
+.coverage
+__pycache__

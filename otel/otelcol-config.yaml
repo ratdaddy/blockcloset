@@ -1,0 +1,39 @@
+receivers:
+  syslog:
+    udp:
+      listen_address: "0.0.0.0:5514"
+    protocol: rfc5424
+
+processors:
+  resource:
+    attributes:
+      - key: service.name
+        value: gateway
+        action: upsert
+  batch: {}
+  transform/jsonify:
+    log_statements:
+      - context: log
+        statements:
+          - set(body, attributes["message"])
+            where attributes["message"] != nil and IsString(attributes["message"])
+          - set(body, ParseJSON(body))
+            where IsString(body) and IsMatch(body, "^[\\[{]")
+          - set(severity_text, body["level"])
+            where IsMap(body) and body["level"] != nil
+          - set(resource.attributes["level"], body["level"])
+            where IsMap(body) and body["level"] != nil
+
+exporters:
+  otlphttp:
+    endpoint: http://loki:3100/otlp
+
+service:
+  pipelines:
+    logs:
+      receivers: [syslog]
+      processors: [transform/jsonify, resource, batch]
+      exporters: [otlphttp]
+  telemetry:
+    logs:
+      level: info
