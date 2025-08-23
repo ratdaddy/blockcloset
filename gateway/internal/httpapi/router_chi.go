@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+
 	"github.com/ratdaddy/blockcloset/gateway/internal/logger"
 	"github.com/ratdaddy/blockcloset/gateway/internal/respond"
 )
@@ -15,7 +16,10 @@ type BucketHandlers interface {
 
 func NewRouter(h BucketHandlers) http.Handler {
 	mux := chi.NewRouter()
+
 	mux.Use(logger.RequestLogger)
+
+	mux.Use(RequestID())
 
 	mux.Use(middleware.StripSlashes)
 

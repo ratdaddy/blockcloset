@@ -4,7 +4,7 @@ BIN_NAME := gateway
 
 .PHONY: run dev test testdev build
 run:
-	go run ./cmd/gateway
+	@go run ./cmd/gateway
 
 dev:
 	@find . -name '*.go' ! -name '*_test.go' | entr -r go run ./cmd/gateway

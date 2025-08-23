@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+
 	"github.com/ratdaddy/blockcloset/gateway/internal/logger"
 	"github.com/ratdaddy/blockcloset/gateway/internal/respond"
 )
