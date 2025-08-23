@@ -1,7 +1,6 @@
 package logger
 
 import (
-	"context"
 	"log/slog"
 	"net/http"
 
@@ -9,13 +8,6 @@ import (
 
 	"github.com/ratdaddy/blockcloset/gateway/internal/config"
 )
-
-type ctxWriter struct {
-	http.ResponseWriter
-	ctx context.Context
-}
-
-func (w *ctxWriter) Context() context.Context { return w.ctx }
 
 var RequestLogger = func(next http.Handler) http.Handler {
 	var sc *httplog.Schema
