@@ -3,16 +3,38 @@ name: ci
 on:
   push:
     branches: [ main ]
-    paths: [ "gateway/**", ".github/workflows/ci.yml" ]
+    paths: [ "gateway/**", "gantry/**", ".github/workflows/ci.yml" ]
   pull_request:
-    paths: [ "gateway/**", ".github/workflows/ci.yml" ]
+    paths: [ "gateway/**", "gantry/**", ".github/workflows/ci.yml" ]
 
 jobs:
-  test:
+  gateway-test:
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: gateway
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: gateway/go.mod
+          cache: true
+
+      - name: Show Go version
+        run: go version
+
+      - name: Build
+        run: go build ./...
+
+      - name: Test
+        run: go test -race -count=1 ./...
+
+  gantry-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: gantry
     steps:
       - uses: actions/checkout@v4
 

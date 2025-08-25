@@ -2,7 +2,8 @@ SHELL := /bin/bash
 BIN_DIR := bin
 BIN_NAME := gateway
 
-.PHONY: run dev test testdev build
+.PHONY: run dev test testdev build docker-build
+
 run:
 	@go run ./cmd/gateway
 
@@ -25,7 +26,6 @@ VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
 COMMIT  ?= $(shell git rev-parse --short HEAD)
 DATE    ?= $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
 
-.PHONY: docker-build
 docker-build:
 	DOCKER_BUILDKIT=1 docker build \
 		--build-arg VERSION=$(VERSION) \
