@@ -2,7 +2,7 @@ SHELL := /bin/bash
 BIN_DIR := bin
 BIN_NAME := gantry
 
-.PHONY: run dev
+.PHONY: run dev test testdev build
 
 run:
 	@go run ./cmd/gantry
