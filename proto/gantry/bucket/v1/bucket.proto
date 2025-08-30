@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package gantry.bucket.v1;
+
+message Bucket {
+  string name = 1;
+  string created_at_rfc3339 = 2;
+  reserved 3 to 10;
+}
+
