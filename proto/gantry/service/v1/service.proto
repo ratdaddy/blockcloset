@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package gantry.service.v1;
+option go_package = "github.com/ratdaddy/blockcloset/proto/gen/go/gantry/service/v1;servicev1";
+
+import "gantry/bucket/v1/bucket.proto";
+
+service GantryService {
+  rpc CreateBucket(CreateBucketRequest) returns (CreateBucketResponse);
+}
+
+message CreateBucketRequest {
+  string name = 1;
+}
+
+message CreateBucketResponse {
+  gantry.bucket.v1.Bucket bucket = 1;
+}
