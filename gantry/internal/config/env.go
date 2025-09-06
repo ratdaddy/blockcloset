@@ -30,9 +30,10 @@ const (
 )
 
 var (
-	AppEnv       envVal
-	LogFormat    logFormatVal
-	LogVerbosity logVerbosityVal
+	AppEnv           envVal
+	LogFormat        logFormatVal
+	LogVerbosity     logVerbosityVal
+	EnableReflection bool
 )
 
 func Init() {
@@ -42,9 +43,11 @@ func Init() {
 	case EnvDevelopment, EnvTest:
 		LogFormat = LogPretty
 		LogVerbosity = LogConcise
+		EnableReflection = true
 	default:
 		LogFormat = LogJSON
 		LogVerbosity = LogVerbose
+		EnableReflection = false
 	}
 
 	if v := strings.ToLower(strings.TrimSpace(os.Getenv("LOG_FORMAT"))); v != "" {
@@ -62,6 +65,15 @@ func Init() {
 			LogVerbosity = LogVerbose
 		case "concise":
 			LogVerbosity = LogConcise
+		}
+	}
+
+	if v := strings.ToLower(strings.TrimSpace(os.Getenv("ENABLE_REFLECTION"))); v != "" {
+		switch v {
+		case "true", "True", "1", "yes", "on":
+			EnableReflection = true
+		case "false", "False", "0", "no", "off":
+			EnableReflection = false
 		}
 	}
 }

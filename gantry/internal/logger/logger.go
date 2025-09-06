@@ -6,7 +6,7 @@ import (
 
 	"github.com/lmittmann/tint"
 
-	"github.com/ratdaddy/blockcloset/gateway/internal/config"
+	"github.com/ratdaddy/blockcloset/gantry/internal/config"
 )
 
 func Init() {
