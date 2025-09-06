@@ -3,9 +3,9 @@ name: ci
 on:
   push:
     branches: [ main ]
-    paths: [ "gateway/**", "gantry/**", "proto/**", "go.work*", ".github/workflows/ci.yml" ]
+    paths: [ "gateway/**", "gantry/**", "proto/**", "loggrpc/**", ".github/workflows/ci.yml" ]
   pull_request:
-    paths: [ "gateway/**", "gantry/**", "proto/**", "go.work*", ".github/workflows/ci.yml" ]
+    paths: [ "gateway/**", "gantry/**", "proto/**", "loggrpc/**", ".github/workflows/ci.yml" ]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

@@ -5,7 +5,7 @@ BIN_NAME := gantry
 .PHONY: run dev test testdev build
 
 run:
-	@ENABLE_REFLECTION=true go run ./cmd/gantry
+	@go run ./cmd/gantry
 
 dev:
 	@find . -name '*.go' ! -name '*_test.go' | ENABLE_REFLECTION=true entr -r go run ./cmd/gantry
