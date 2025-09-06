@@ -6,38 +6,42 @@ import (
 	"net"
 	"os"
 	"os/signal"
-	"strconv"
 	"syscall"
 	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
+	"github.com/ratdaddy/blockcloset/gantry/internal/config"
 	"github.com/ratdaddy/blockcloset/gantry/internal/grpcsvc"
+	"github.com/ratdaddy/blockcloset/gantry/internal/logger"
+	"github.com/ratdaddy/blockcloset/loggrpc"
 )
 
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
+	config.Init()
+	logger.Init()
 
 	addr := ":8081"
 
-	logger.Info("gantry starting", "addr", addr)
+	slog.Info("starting gantry", "addr", addr)
 
 	lis, err := net.Listen("tcp", addr)
 	if err != nil {
-		logger.Error("listen failed", "err", err)
+		slog.Error("listen failed", "err", err)
 		os.Exit(1)
 	}
 
-	s := grpc.NewServer()
+	logger := slog.Default()
+	s := grpc.NewServer(grpc.UnaryInterceptor(loggrpc.UnaryServerInterceptor(logger)))
 
-	grpcsvc.Register(s)
+	grpcsvc.Register(s, grpcsvc.New(logger))
 
-	enable_reflection, _ := strconv.ParseBool(os.Getenv("ENABLE_REFLECTION"))
-	if enable_reflection {
+	if config.EnableReflection {
+		slog.Info("grpc reflection enabled")
 		reflection.Register(s)
 	}
 
@@ -46,8 +50,7 @@ func main() {
 
 	select {
 	case <-ctx.Done():
-		logger.Info("shutdown signal received")
-		// graceful stop with a short cap, then force
+		slog.Info("shutdown signal received")
 		done := make(chan struct{})
 		go func() {
 			s.GracefulStop()
@@ -55,13 +58,12 @@ func main() {
 		}()
 		select {
 		case <-done:
-			logger.Info("grpc server stopped gracefully")
+			slog.Info("grpc server stopped gracefully")
 		case <-time.After(3 * time.Second):
-			logger.Warn("graceful stop timed out; forcing")
+			slog.Warn("graceful stop timed out; forcing")
 			s.Stop()
 		}
 	case err := <-errCh:
-		// Serve exited on its own (listener closed or fatal error)
-		logger.Error("grpc serve exited", "err", err)
+		slog.Error("grpc serve exited", "err", err)
 	}
 }

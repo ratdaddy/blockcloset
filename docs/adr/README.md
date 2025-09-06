@@ -18,6 +18,7 @@ Only ADRs in the **Adopted** state appear here.
 | [0004](0004-adoption-of-chi-router-for-http-routing.md) | Adoption of Chi Router for HTTP Routing | Complete | Details the decision to use the Chi router for HTTP routing in Go services. |
 | [0005](0005-standardizing-environment-variable-for-application-runtime-mode.md) | Standardizing Environment Variable for Application Runtime Mode | Complete | Establishes a standard environment variable to define the application runtime mode (e.g., development, production). |
 | [0006](0006-structured-logging-with-slog-and-go-chi-httplog.md) | Structured Logging with slog and go-chi/httplog | Complete | Describes the adoption of structured logging using the slog package and integration with go-chi/httplog. |
+| [0007](0007-loggrpc-package-for-grpc-logging.md) | loggrpc Package for gRPC Logging | Complete | Introduces the loggrpc package to facilitate structured logging in gRPC services. |
 
 ---
 

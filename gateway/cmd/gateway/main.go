@@ -1,8 +1,9 @@
 package main
 
 import (
-	"log"
+	"log/slog"
 	"net/http"
+	"os"
 
 	"github.com/ratdaddy/blockcloset/gateway/internal/config"
 	"github.com/ratdaddy/blockcloset/gateway/internal/httpapi"
@@ -20,8 +21,9 @@ func main() {
 
 	h := buildHandler()
 	addr := ":8080"
-	log.Printf("gateway listening on %s", addr)
+	slog.Info("starting gateway", "addr", addr)
 	if err := listenAndServe(addr, h); err != nil {
-		log.Fatal(err)
+		slog.Error("http listen and serve exited", "err", err)
+		os.Exit(1)
 	}
 }
