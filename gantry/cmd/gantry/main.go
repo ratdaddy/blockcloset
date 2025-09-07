@@ -36,10 +36,11 @@ func main() {
 	}
 
 	logger := slog.Default()
-	s := grpc.NewServer(grpc.UnaryInterceptor(loggrpc.UnaryServerInterceptor(logger)))
+	s := grpc.NewServer(grpc.UnaryInterceptor(loggrpc.UnaryServerInterceptor(logger, &loggrpc.Options{
+		Schema: loggrpc.SchemaOTEL.Concise(config.LogVerbosity == config.LogConcise),
+	})))
 
 	grpcsvc.Register(s, grpcsvc.New(logger))
-
 	if config.EnableReflection {
 		slog.Info("grpc reflection enabled")
 		reflection.Register(s)
