@@ -15,10 +15,21 @@ import (
 )
 
 // Also need a StreamServerInterceptor for streaming RPCs
-func UnaryServerInterceptor(logger *slog.Logger) grpc.UnaryServerInterceptor {
+func UnaryServerInterceptor(logger *slog.Logger, o *Options) grpc.UnaryServerInterceptor {
+	if o == nil {
+		o = &Options{Schema: SchemaOTEL}
+	}
+
+	s := o.Schema
+	if s == nil {
+		s = SchemaOTEL
+	}
+
 	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
 
 		start := time.Now()
+
+		ctx = context.WithValue(ctx, ctxKeyLogAttrs{}, &[]slog.Attr{})
 
 		resp, err := handler(ctx, req)
 
@@ -27,53 +38,66 @@ func UnaryServerInterceptor(logger *slog.Logger) grpc.UnaryServerInterceptor {
 		service, method := splitFullMethod(info.FullMethod)
 		code := status.Code(err)
 
-		attrs := []slog.Attr{
-			slog.String("grpc.full_method", info.FullMethod),
-			slog.String("grpc.service", service),
-			slog.String("grpc.method", method),
-			slog.String("rpc.system", "grpc"),
-			slog.String("grpc.code", code.String()),
+		attrs := []slog.Attr{}
+
+		attrs = appendAttrs(attrs,
+			slog.String(s.FullMethod, info.FullMethod),
+			slog.String(s.Service, service),
+			slog.String(s.Method, method),
+			slog.String(s.System, "grpc"),
+			slog.String(s.Code, code.String()),
 			// mimics httplog but maybe should be network.protocol.name (HTTP) & network.protocol.version (2)
-			slog.String("network.protocol.version", "HTTP/2"),
-			slog.Float64("rpc.server.duration", float64(dur)/float64(time.Second)),
-		}
+			slog.String(s.Protocol, "HTTP/2"),
+			slog.Float64(s.Duration, float64(dur)/float64(time.Second)),
+		)
 
 		if p, ok := peer.FromContext(ctx); ok && p.Addr != nil {
 			// Doesn't work if behind a proxy
-			attrs = append(attrs, slog.String("client.address", p.Addr.String()))
+			attrs = appendAttrs(attrs, slog.String(s.RemoteIP, p.Addr.String()))
 
 			scheme := "grpc"
 			if p.AuthInfo != nil {
 				scheme = "grpcs"
 			}
-			attrs = append(attrs, slog.String("url.scheme", scheme))
+			attrs = appendAttrs(attrs, slog.String(s.Scheme, scheme))
 		}
 
 		if md, ok := metadata.FromIncomingContext(ctx); ok {
 			if h := first(md.Get(":authority")); h != "" {
-				attrs = append(attrs, slog.String("server.address", h))
+				attrs = appendAttrs(attrs, slog.String(s.Host, h))
 			}
 
 			if v := first(md.Get("user-agent")); v != "" {
-				attrs = append(attrs, slog.String("user_agent.original", v))
+				attrs = appendAttrs(attrs, slog.String(s.UserAgent, v))
 			}
 		}
 
 		if pm, ok := req.(proto.Message); ok {
-			attrs = append(attrs, slog.Int("grpc.request.size", proto.Size(pm)))
+			attrs = appendAttrs(attrs, slog.Int(s.RequestBytes, proto.Size(pm)))
 		}
 
 		if pm, ok := resp.(proto.Message); ok {
-			attrs = append(attrs, slog.Int("grpc.response.size", proto.Size(pm)))
+			attrs = appendAttrs(attrs, slog.Int(s.ResponseBytes, proto.Size(pm)))
 		}
+
+		attrs = appendAttrs(attrs, getAttrs(ctx)...)
 
 		level := codeToLevel(code)
 
-		msg := fmt.Sprintf("Unary %s => gRPC %s (%s)", info.FullMethod, code.String(), humanDuration(dur))
+		msg := fmt.Sprintf("Unary %s => gRPC %v (%v)", info.FullMethod, code, dur)
 
 		logger.LogAttrs(ctx, level, msg, attrs...)
 		return resp, err
 	}
+}
+
+func appendAttrs(attrs []slog.Attr, newAttrs ...slog.Attr) []slog.Attr {
+	for _, attr := range newAttrs {
+		if attr.Key != "" {
+			attrs = append(attrs, attr)
+		}
+	}
+	return attrs
 }
 
 func splitFullMethod(full string) (service, method string) {
@@ -89,24 +113,6 @@ func splitFullMethod(full string) (service, method string) {
 		}
 	}
 	return full, ""
-}
-
-func humanDuration(d time.Duration) string {
-	const (
-		us = time.Microsecond
-		ms = time.Millisecond
-		s  = time.Second
-	)
-	switch {
-	case d >= s:
-		return fmt.Sprintf("%.3fs", float64(d)/float64(s))
-	case d >= ms:
-		return fmt.Sprintf("%.3fms", float64(d)/float64(ms))
-	case d >= us:
-		return fmt.Sprintf("%.3fµs", float64(d)/float64(us))
-	default:
-		return fmt.Sprintf("%dns", d.Nanoseconds())
-	}
 }
 
 func first(ss []string) string {
