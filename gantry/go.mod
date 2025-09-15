@@ -3,6 +3,7 @@ module github.com/ratdaddy/blockcloset/gantry
 go 1.24.6
 
 require (
+	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.2
 	github.com/lmittmann/tint v1.1.2
 	github.com/ratdaddy/blockcloset/loggrpc v0.0.0
 	github.com/ratdaddy/blockcloset/proto v0.0.0

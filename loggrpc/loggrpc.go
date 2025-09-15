@@ -45,9 +45,9 @@ func UnaryServerInterceptor(logger *slog.Logger, o *Options) grpc.UnaryServerInt
 			slog.String(s.Service, service),
 			slog.String(s.Method, method),
 			slog.String(s.System, "grpc"),
-			slog.String(s.Code, code.String()),
-			// mimics httplog but maybe should be network.protocol.name (HTTP) & network.protocol.version (2)
-			slog.String(s.Protocol, "HTTP/2"),
+			slog.Int(s.Code, int(code)),
+			slog.String(s.ProtocolName, "HTTP"),
+			slog.String(s.ProtocolVersion, "2"),
 			slog.Float64(s.Duration, float64(dur)/float64(time.Second)),
 		)
 

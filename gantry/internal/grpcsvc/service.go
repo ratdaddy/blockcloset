@@ -34,6 +34,10 @@ func (s *Service) CreateBucket(ctx context.Context, req *servicev1.CreateBucketR
 		return nil, status.Errorf(codes.InvalidArgument, "bucket name %q is not allowed", bucket)
 	}
 
+	if bucket == "panic" {
+		panic(status.New(codes.Internal, "intentional test panic"))
+	}
+
 	loggrpc.SetAttrs(ctx, slog.String("result", fmt.Sprintf("bucket <%s> created", bucket)))
 
 	return &servicev1.CreateBucketResponse{
