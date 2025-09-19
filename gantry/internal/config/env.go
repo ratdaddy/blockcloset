@@ -3,6 +3,7 @@ package config
 import (
 	"flag"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -34,6 +35,7 @@ var (
 	LogFormat        logFormatVal
 	LogVerbosity     logVerbosityVal
 	EnableReflection bool
+	GantryPort       int
 )
 
 func Init() {
@@ -49,6 +51,8 @@ func Init() {
 		LogVerbosity = LogVerbose
 		EnableReflection = false
 	}
+
+	GantryPort = 8081
 
 	if v := strings.ToLower(strings.TrimSpace(os.Getenv("LOG_FORMAT"))); v != "" {
 		switch v {
@@ -74,6 +78,12 @@ func Init() {
 			EnableReflection = true
 		case "false", "False", "0", "no", "off":
 			EnableReflection = false
+		}
+	}
+
+	if v := strings.TrimSpace(os.Getenv("GANTRY_PORT")); v != "" {
+		if port, err := strconv.Atoi(v); err == nil && port > 0 && port < 65536 {
+			GantryPort = port
 		}
 	}
 }
