@@ -11,6 +11,14 @@ The project is intended to be **easy to configure and manage**, with:
 
 ---
 
+## Setup
+
+Shared environment configuration is managed via [direnv](https://direnv.net/).
+The environment variables themselves are defined in `env/.env.<environment>` so for development it's `env/.env.development`.
+Local overrides can be placed in `env/.env.local`.
+
+---
+
 ## Current Status
 
 This repository is in the earliest stage of development.

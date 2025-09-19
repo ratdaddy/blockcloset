@@ -3,6 +3,7 @@ package config
 import (
 	"flag"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -33,6 +34,7 @@ var (
 	AppEnv       envVal
 	LogFormat    logFormatVal
 	LogVerbosity logVerbosityVal
+	GatewayPort  int
 )
 
 func Init() {
@@ -46,6 +48,8 @@ func Init() {
 		LogFormat = LogJSON
 		LogVerbosity = LogVerbose
 	}
+
+	GatewayPort = 8080
 
 	if v := strings.ToLower(strings.TrimSpace(os.Getenv("LOG_FORMAT"))); v != "" {
 		switch v {
@@ -64,6 +68,13 @@ func Init() {
 			LogVerbosity = LogConcise
 		}
 	}
+
+	if v := strings.TrimSpace(os.Getenv("GATEWAY_PORT")); v != "" {
+		if port, err := strconv.Atoi(v); err == nil && port > 0 && port < 65536 {
+			GatewayPort = port
+		}
+	}
+
 }
 
 func parseEnv(v string) envVal {

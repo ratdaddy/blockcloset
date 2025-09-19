@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"net"
 	"os"
@@ -26,7 +27,7 @@ func main() {
 	config.Init()
 	logger.Init()
 
-	addr := ":8081"
+	addr := fmt.Sprintf(":%d", config.GantryPort)
 
 	slog.Info("starting gantry", "addr", addr)
 

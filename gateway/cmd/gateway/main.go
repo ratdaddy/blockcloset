@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -20,7 +21,7 @@ func main() {
 	logger.Init()
 
 	h := buildHandler()
-	addr := ":8080"
+	addr := fmt.Sprintf(":%d", config.GatewayPort)
 	slog.Info("starting gateway", "addr", addr)
 	if err := listenAndServe(addr, h); err != nil {
 		slog.Error("http listen and serve exited", "err", err)
