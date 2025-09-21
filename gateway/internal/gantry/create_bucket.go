@@ -2,6 +2,7 @@ package gantry
 
 import (
 	"context"
+
 	servicev1 "github.com/ratdaddy/blockcloset/proto/gen/gantry/service/v1"
 )
 
