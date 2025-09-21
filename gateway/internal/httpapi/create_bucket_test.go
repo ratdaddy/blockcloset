@@ -32,7 +32,16 @@ func (s *stubValidator) ValidateBucketName(name string) error {
 	return s.err
 }
 
-func TestCreateBucket_ValidationAndResponse(t *testing.T) {
+type stubGantryClient struct {
+	calls []string
+}
+
+func (s *stubGantryClient) CreateBucket(ctx context.Context, name string) (string, error) {
+	s.calls = append(s.calls, name)
+	return "", nil
+}
+
+func TestCreateBucket_ValidationGantryAndResponse(t *testing.T) {
 	t.Parallel()
 
 	type tc struct {
@@ -66,7 +75,8 @@ func TestCreateBucket_ValidationAndResponse(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			v := &stubValidator{err: c.validatorErr}
-			h := &httpapi.Handlers{Validator: v}
+			g := &stubGantryClient{}
+			h := &httpapi.Handlers{Validator: v, Gantry: g}
 
 			req := reqWithBucket(t, http.MethodPut, c.bucket)
 			rec := httptest.NewRecorder()
@@ -75,6 +85,16 @@ func TestCreateBucket_ValidationAndResponse(t *testing.T) {
 
 			if len(v.calls) != 1 || v.calls[0] != c.bucket {
 				t.Fatalf("validator calls = %#v; want exactly [%q]", v.calls, c.bucket)
+			}
+
+			if c.validatorErr == nil {
+				if len(g.calls) != 1 || g.calls[0] != c.bucket {
+					t.Fatalf("gantry create_bucket calls = %#v; want exactly [%q]", g.calls, c.bucket)
+				}
+			} else {
+				if len(g.calls) != 0 {
+					t.Fatalf("expected no gantry calls, got %#v", g.calls)
+				}
 			}
 
 			if rec.Code != c.wantStatus {
