@@ -35,6 +35,7 @@ var (
 	LogFormat    logFormatVal
 	LogVerbosity logVerbosityVal
 	GatewayPort  int
+	GantryAddr   string
 )
 
 func Init() {
@@ -75,6 +76,9 @@ func Init() {
 		}
 	}
 
+	if v := strings.TrimSpace(os.Getenv("GATEWAY_GANTRY_ADDR")); v != "" {
+		GantryAddr = v
+	}
 }
 
 func parseEnv(v string) envVal {

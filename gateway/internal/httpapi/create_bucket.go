@@ -10,12 +10,6 @@ import (
 	"github.com/ratdaddy/blockcloset/gateway/internal/respond"
 )
 
-type Handlers struct {
-	Validator BucketNameValidator
-}
-
-func NewHandlers() *Handlers { return &Handlers{Validator: DefaultBucketNameValidator{}} }
-
 func (h *Handlers) CreateBucket(w http.ResponseWriter, r *http.Request) {
 	bucket := chi.URLParam(r, "bucket")
 
@@ -23,6 +17,8 @@ func (h *Handlers) CreateBucket(w http.ResponseWriter, r *http.Request) {
 		respond.Error(w, r, err.Error(), http.StatusBadRequest)
 		return
 	}
+
+	_, _ = h.Gantry.CreateBucket(r.Context(), bucket)
 
 	logger.LogResult(r, fmt.Sprintf("bucket <%s> created", bucket))
 	w.Header().Set("Location", "/"+bucket)
