@@ -22,6 +22,55 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type BucketOwnershipConflict_Reason int32
+
+const (
+	BucketOwnershipConflict_REASON_UNSPECIFIED                 BucketOwnershipConflict_Reason = 0
+	BucketOwnershipConflict_REASON_BUCKET_ALREADY_OWNED_BY_YOU BucketOwnershipConflict_Reason = 1
+	BucketOwnershipConflict_REASON_BUCKET_ALREADY_EXISTS       BucketOwnershipConflict_Reason = 2
+)
+
+// Enum value maps for BucketOwnershipConflict_Reason.
+var (
+	BucketOwnershipConflict_Reason_name = map[int32]string{
+		0: "REASON_UNSPECIFIED",
+		1: "REASON_BUCKET_ALREADY_OWNED_BY_YOU",
+		2: "REASON_BUCKET_ALREADY_EXISTS",
+	}
+	BucketOwnershipConflict_Reason_value = map[string]int32{
+		"REASON_UNSPECIFIED":                 0,
+		"REASON_BUCKET_ALREADY_OWNED_BY_YOU": 1,
+		"REASON_BUCKET_ALREADY_EXISTS":       2,
+	}
+)
+
+func (x BucketOwnershipConflict_Reason) Enum() *BucketOwnershipConflict_Reason {
+	p := new(BucketOwnershipConflict_Reason)
+	*p = x
+	return p
+}
+
+func (x BucketOwnershipConflict_Reason) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (BucketOwnershipConflict_Reason) Descriptor() protoreflect.EnumDescriptor {
+	return file_gantry_service_v1_service_proto_enumTypes[0].Descriptor()
+}
+
+func (BucketOwnershipConflict_Reason) Type() protoreflect.EnumType {
+	return &file_gantry_service_v1_service_proto_enumTypes[0]
+}
+
+func (x BucketOwnershipConflict_Reason) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use BucketOwnershipConflict_Reason.Descriptor instead.
+func (BucketOwnershipConflict_Reason) EnumDescriptor() ([]byte, []int) {
+	return file_gantry_service_v1_service_proto_rawDescGZIP(), []int{2, 0}
+}
+
 type CreateBucketRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
@@ -110,6 +159,58 @@ func (x *CreateBucketResponse) GetBucket() *v1.Bucket {
 	return nil
 }
 
+type BucketOwnershipConflict struct {
+	state         protoimpl.MessageState         `protogen:"open.v1"`
+	Reason        BucketOwnershipConflict_Reason `protobuf:"varint,1,opt,name=reason,proto3,enum=gantry.service.v1.BucketOwnershipConflict_Reason" json:"reason,omitempty"`
+	Bucket        string                         `protobuf:"bytes,2,opt,name=bucket,proto3" json:"bucket,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *BucketOwnershipConflict) Reset() {
+	*x = BucketOwnershipConflict{}
+	mi := &file_gantry_service_v1_service_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BucketOwnershipConflict) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BucketOwnershipConflict) ProtoMessage() {}
+
+func (x *BucketOwnershipConflict) ProtoReflect() protoreflect.Message {
+	mi := &file_gantry_service_v1_service_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BucketOwnershipConflict.ProtoReflect.Descriptor instead.
+func (*BucketOwnershipConflict) Descriptor() ([]byte, []int) {
+	return file_gantry_service_v1_service_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *BucketOwnershipConflict) GetReason() BucketOwnershipConflict_Reason {
+	if x != nil {
+		return x.Reason
+	}
+	return BucketOwnershipConflict_REASON_UNSPECIFIED
+}
+
+func (x *BucketOwnershipConflict) GetBucket() string {
+	if x != nil {
+		return x.Bucket
+	}
+	return ""
+}
+
 var File_gantry_service_v1_service_proto protoreflect.FileDescriptor
 
 const file_gantry_service_v1_service_proto_rawDesc = "" +
@@ -118,7 +219,14 @@ const file_gantry_service_v1_service_proto_rawDesc = "" +
 	"\x13CreateBucketRequest\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\"H\n" +
 	"\x14CreateBucketResponse\x120\n" +
-	"\x06bucket\x18\x01 \x01(\v2\x18.gantry.bucket.v1.BucketR\x06bucket2p\n" +
+	"\x06bucket\x18\x01 \x01(\v2\x18.gantry.bucket.v1.BucketR\x06bucket\"\xe8\x01\n" +
+	"\x17BucketOwnershipConflict\x12I\n" +
+	"\x06reason\x18\x01 \x01(\x0e21.gantry.service.v1.BucketOwnershipConflict.ReasonR\x06reason\x12\x16\n" +
+	"\x06bucket\x18\x02 \x01(\tR\x06bucket\"j\n" +
+	"\x06Reason\x12\x16\n" +
+	"\x12REASON_UNSPECIFIED\x10\x00\x12&\n" +
+	"\"REASON_BUCKET_ALREADY_OWNED_BY_YOU\x10\x01\x12 \n" +
+	"\x1cREASON_BUCKET_ALREADY_EXISTS\x10\x022p\n" +
 	"\rGantryService\x12_\n" +
 	"\fCreateBucket\x12&.gantry.service.v1.CreateBucketRequest\x1a'.gantry.service.v1.CreateBucketResponseB\xd2\x01\n" +
 	"\x15com.gantry.service.v1B\fServiceProtoP\x01ZEgithub.com/ratdaddy/blockcloset/proto/gen/gantry/service/v1;servicev1\xa2\x02\x03GSX\xaa\x02\x11Gantry.Service.V1\xca\x02\x11Gantry\\Service\\V1\xe2\x02\x1dGantry\\Service\\V1\\GPBMetadata\xea\x02\x13Gantry::Service::V1b\x06proto3"
@@ -135,21 +243,25 @@ func file_gantry_service_v1_service_proto_rawDescGZIP() []byte {
 	return file_gantry_service_v1_service_proto_rawDescData
 }
 
-var file_gantry_service_v1_service_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_gantry_service_v1_service_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_gantry_service_v1_service_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
 var file_gantry_service_v1_service_proto_goTypes = []any{
-	(*CreateBucketRequest)(nil),  // 0: gantry.service.v1.CreateBucketRequest
-	(*CreateBucketResponse)(nil), // 1: gantry.service.v1.CreateBucketResponse
-	(*v1.Bucket)(nil),            // 2: gantry.bucket.v1.Bucket
+	(BucketOwnershipConflict_Reason)(0), // 0: gantry.service.v1.BucketOwnershipConflict.Reason
+	(*CreateBucketRequest)(nil),         // 1: gantry.service.v1.CreateBucketRequest
+	(*CreateBucketResponse)(nil),        // 2: gantry.service.v1.CreateBucketResponse
+	(*BucketOwnershipConflict)(nil),     // 3: gantry.service.v1.BucketOwnershipConflict
+	(*v1.Bucket)(nil),                   // 4: gantry.bucket.v1.Bucket
 }
 var file_gantry_service_v1_service_proto_depIdxs = []int32{
-	2, // 0: gantry.service.v1.CreateBucketResponse.bucket:type_name -> gantry.bucket.v1.Bucket
-	0, // 1: gantry.service.v1.GantryService.CreateBucket:input_type -> gantry.service.v1.CreateBucketRequest
-	1, // 2: gantry.service.v1.GantryService.CreateBucket:output_type -> gantry.service.v1.CreateBucketResponse
-	2, // [2:3] is the sub-list for method output_type
-	1, // [1:2] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	4, // 0: gantry.service.v1.CreateBucketResponse.bucket:type_name -> gantry.bucket.v1.Bucket
+	0, // 1: gantry.service.v1.BucketOwnershipConflict.reason:type_name -> gantry.service.v1.BucketOwnershipConflict.Reason
+	1, // 2: gantry.service.v1.GantryService.CreateBucket:input_type -> gantry.service.v1.CreateBucketRequest
+	2, // 3: gantry.service.v1.GantryService.CreateBucket:output_type -> gantry.service.v1.CreateBucketResponse
+	3, // [3:4] is the sub-list for method output_type
+	2, // [2:3] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_gantry_service_v1_service_proto_init() }
@@ -162,13 +274,14 @@ func file_gantry_service_v1_service_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_gantry_service_v1_service_proto_rawDesc), len(file_gantry_service_v1_service_proto_rawDesc)),
-			NumEnums:      0,
-			NumMessages:   2,
+			NumEnums:      1,
+			NumMessages:   3,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
 		GoTypes:           file_gantry_service_v1_service_proto_goTypes,
 		DependencyIndexes: file_gantry_service_v1_service_proto_depIdxs,
+		EnumInfos:         file_gantry_service_v1_service_proto_enumTypes,
 		MessageInfos:      file_gantry_service_v1_service_proto_msgTypes,
 	}.Build()
 	File_gantry_service_v1_service_proto = out.File
