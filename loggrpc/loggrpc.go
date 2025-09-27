@@ -70,6 +70,10 @@ func UnaryServerInterceptor(logger *slog.Logger, o *Options) grpc.UnaryServerInt
 			if v := first(md.Get("user-agent")); v != "" {
 				attrs = appendAttrs(attrs, slog.String(s.UserAgent, v))
 			}
+
+			if v := first(md.Get("x-request-id")); v != "" && s.RequestID != "" {
+				attrs = appendAttrs(attrs, slog.String(s.RequestID, v))
+			}
 		}
 
 		if pm, ok := req.(proto.Message); ok {

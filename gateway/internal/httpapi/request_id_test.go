@@ -2,6 +2,7 @@ package httpapi
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"io"
 	"log/slog"
@@ -69,7 +70,7 @@ func exercise(t *testing.T, req *http.Request) (*httptest.ResponseRecorder, stri
 	var observedID string
 
 	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		observedID = Get(r.Context())
+		observedID = RequestIDFromContext(r.Context())
 		if observedID == "" {
 			t.Fatalf("expected request id in context")
 		}
@@ -206,5 +207,57 @@ func TestMiddleware_GenerationProducesDifferentIDs(t *testing.T) {
 	}
 	if rr1.Header().Get("X-Request-ID") != id1 {
 		t.Fatalf("response header should echo id1")
+	}
+}
+
+func TestWithRequestIDAndRequestIDFromContext(t *testing.T) {
+	t.Parallel()
+
+	base := context.Background()
+
+	if got := RequestIDFromContext(base); got != "" {
+		t.Fatalf("RequestIDFromContext empty base = %q, want \"\"", got)
+	}
+
+	tests := []struct {
+		name     string
+		ctx      context.Context
+		id       string
+		want     string
+		wantSame bool
+	}{
+		{
+			name: "sets id on empty context",
+			ctx:  base,
+			id:   "req-123",
+			want: "req-123",
+		},
+		{
+			name: "overrides existing id",
+			ctx:  WithRequestID(base, "old"),
+			id:   "new",
+			want: "new",
+		},
+		{
+			name:     "empty id leaves context unchanged",
+			ctx:      WithRequestID(base, "keep"),
+			id:       "",
+			want:     "keep",
+			wantSame: true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			gotCtx := WithRequestID(tc.ctx, tc.id)
+
+			if tc.wantSame && gotCtx != tc.ctx {
+				t.Fatalf("expected context to be unchanged")
+			}
+
+			if got := RequestIDFromContext(gotCtx); got != tc.want {
+				t.Fatalf("RequestIDFromContext = %q, want %q", got, tc.want)
+			}
+		})
 	}
 }
