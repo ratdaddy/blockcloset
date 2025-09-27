@@ -23,7 +23,6 @@ Local overrides can be placed in `env/.env.local`.
 
 This repository is in the earliest stage of development.
 At present:
-- There is no runnable code.
 - Initial documentation and architectural groundwork are being established.
 - The first ADRs are being written to guide implementation.
 
@@ -79,5 +78,38 @@ Multiple node types will exist—for example, storage nodes, gateway/control-pla
   1. Establishing strong foundations for development and operations, including build tooling, deployment scripts, and observability basics.
   2. Implementing the API/Gateway component with object upload/download endpoints and the beginnings of the administrative UI.
   3. Integrating basic storage-node interaction and simple replication between nodes.
+
+---
+
+## Running locally
+
+In the gateway and gantry directories run the app with `make run`.
+
+Curl examples to run through gateway:
+```bash
+# successful bucket creation:
+curl -i -X PUT --data '' http://$GATEWAY_ADDR/hello
+
+# attempt to create a bucket with an invalid name:
+curl -i -X PUT --data '' http://$GATEWAY_ADDR/invalid_name!
+
+# attempt to create a bucket with an invalid filename (as seen by gantry):
+curl -i -X PUT --data '' http://$GATEWAY_ADDR/bad
+
+# panic gantry:
+curl -i -X PUT --data '' http://$GATEWAY_ADDR/panic
+```
+
+Grpcurl example to run directly with gantry:
+```bash
+# successful bucket creation:
+grpcurl -plaintext -d '{"name":"bucket"}' $GANTRY_ADDR gantry.service.v1.GantryService/CreateBucket
+
+# attempt to create a bucket with an invalid name:
+grpcurl -plaintext -d '{"name":"bad"}' $GANTRY_ADDR gantry.service.v1.GantryService/CreateBucket
+
+# panic:
+grpcurl -plaintext -d '{"name":"panic"}' $GANTRY_ADDR gantry.service.v1.GantryService/CreateBucket
+```
 
 ---

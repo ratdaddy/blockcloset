@@ -29,6 +29,7 @@
 - `make testdev` watches files and reruns tests with timestamps for tight inner loops.
 - `make build` produces binaries in `bin/`
 - in `proto/`, use `make lint` before editing schemas and `make gen` after edits to refresh generated stubs.
+- Don't create .gocache directories. Prefer using `go clean -cache` to clear the cache.
 
 ## Coding Style & Naming Conventions
 - Format Go with `gofmt`
@@ -39,11 +40,19 @@
 - keep public structs slim with explicit JSON/proto tags when exposed.
 - No trailing whitespace in any files, including documentation. All files end with a newline.
 
+## API Semantics & Error Handling
+- Mirror AWS S3 responses:
+    - map Gantry `codes.Internal` (or other unexpected backend faults) to HTTP `500 InternalError` with S3-style payloads
+    - reserve `503` for retryable outages
+    - `504` for timeouts.
+
 ## Testing Guidelines
 - Co-locate table-driven tests as `<name>_test.go` using the Go `testing` package, mirroring the directory of the code under test.
 - Run `go test ./...` (or `go test -cover ./...` for critical changes) in both services before pushing.
 - Favor interface fakes over network calls
 - reference existing patterns in `gateway/internal/httpapi` and `gantry/internal/grpcsvc` for helpers.
+- Do not ship new production behavior without a failing test in place unless the requester explicitly approves it first.
+- After writing a new test do not write the production behavior until told to do so by the requester.
 
 ## Commit & Pull Request Guidelines
 - Write short, imperative commit subjects (e.g., "Add centralized environment configuration") and reference issues in the body when relevant.
