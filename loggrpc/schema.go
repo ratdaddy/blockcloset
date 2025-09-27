@@ -19,6 +19,7 @@ type Schema struct {
 	UserAgent       string
 	RequestBytes    string
 	ResponseBytes   string
+	RequestID       string
 }
 
 var (
@@ -37,6 +38,7 @@ var (
 		UserAgent:       "user_agent.original",
 		RequestBytes:    "rpc.request.size",
 		ResponseBytes:   "rpc.response.size",
+		RequestID:       "rpc.request.header.x-request-id",
 	}
 )
 

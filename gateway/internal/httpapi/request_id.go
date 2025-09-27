@@ -29,9 +29,16 @@ var (
 	ulidEntropy = ulid.Monotonic(rand.Reader, 0) // monotonic across same ms
 )
 
-func Get(ctx context.Context) string {
+func RequestIDFromContext(ctx context.Context) string {
 	id, _ := ctx.Value(ctxKeyID).(string)
 	return id
+}
+
+func WithRequestID(ctx context.Context, id string) context.Context {
+	if id == "" {
+		return ctx
+	}
+	return context.WithValue(ctx, ctxKeyID, id)
 }
 
 func defaultID() string {
@@ -54,7 +61,7 @@ func RequestID() func(http.Handler) http.Handler {
 				id = defaultID()
 			}
 
-			ctx := context.WithValue(r.Context(), ctxKeyID, id)
+			ctx := WithRequestID(r.Context(), id)
 			r.Header.Set(headerRequestID, id)
 			w.Header().Set(headerRequestID, id)
 
