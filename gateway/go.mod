@@ -7,6 +7,7 @@ require (
 	github.com/go-chi/httplog/v3 v3.2.2
 	github.com/lmittmann/tint v1.1.2
 	github.com/oklog/ulid/v2 v2.1.1
+	github.com/ratdaddy/blockcloset/pkg v0.0.0
 	github.com/ratdaddy/blockcloset/proto v0.0.0
 	google.golang.org/grpc v1.75.1
 	google.golang.org/protobuf v1.36.9
@@ -20,3 +21,5 @@ require (
 )
 
 replace github.com/ratdaddy/blockcloset/proto => ../proto
+
+replace github.com/ratdaddy/blockcloset/pkg => ../pkg
