@@ -13,6 +13,7 @@ import (
 
 	"github.com/ratdaddy/blockcloset/gateway/internal/httpapi"
 	_ "github.com/ratdaddy/blockcloset/gateway/internal/testutil"
+	"github.com/ratdaddy/blockcloset/pkg/storage/bucket"
 	servicev1 "github.com/ratdaddy/blockcloset/proto/gen/gantry/service/v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -85,11 +86,11 @@ func TestCreateBucket_ValidationGantryAndResponse(t *testing.T) {
 		{
 			name:         "invalid bucket -> 400",
 			bucket:       "Bad!Name",
-			validatorErr: httpapi.ErrInvalidBucketName,
+			validatorErr: bucket.ErrInvalidBucketName,
 			gantryErr:    nil,
 			wantStatus:   http.StatusBadRequest,
 			wantLoc:      "",
-			wantBodySub:  httpapi.ErrInvalidBucketName.Error(),
+			wantBodySub:  bucket.ErrInvalidBucketName.Error(),
 		},
 		{
 			name:         "gantry internal error -> 500",

@@ -1,10 +1,10 @@
-package httpapi_test
+package bucket_test
 
 import (
 	"strings"
 	"testing"
 
-	"github.com/ratdaddy/blockcloset/gateway/internal/httpapi"
+	"github.com/ratdaddy/blockcloset/pkg/storage/bucket"
 )
 
 // Bucket name validation tests based on S3 naming rules:
@@ -12,7 +12,7 @@ import (
 
 func TestDefaultBucketNameValidator_GeneralPurposeRules(t *testing.T) {
 	t.Parallel()
-	v := httpapi.DefaultBucketNameValidator{}
+	v := bucket.DefaultBucketNameValidator{}
 
 	type tc struct {
 		name   string
@@ -74,10 +74,10 @@ func TestDefaultBucketNameValidator_GeneralPurposeRules(t *testing.T) {
 			}
 			if !c.wantOK {
 				if err == nil {
-					t.Fatalf("want error %v, got nil", httpapi.ErrInvalidBucketName)
+					t.Fatalf("want error %v, got nil", bucket.ErrInvalidBucketName)
 				}
-				if err != httpapi.ErrInvalidBucketName {
-					t.Fatalf("want %v, got %v", httpapi.ErrInvalidBucketName, err)
+				if err != bucket.ErrInvalidBucketName {
+					t.Fatalf("want %v, got %v", bucket.ErrInvalidBucketName, err)
 				}
 			}
 		})

@@ -1,12 +1,10 @@
-package httpapi
+package bucket
 
 import (
 	"errors"
 	"regexp"
 	"strconv"
 	"strings"
-
-	_ "github.com/ratdaddy/blockcloset/gateway/internal/testutil"
 )
 
 var ErrInvalidBucketName = errors.New("invalid bucket name")
