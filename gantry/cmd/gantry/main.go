@@ -15,6 +15,7 @@ import (
 	"google.golang.org/grpc/reflection"
 
 	"github.com/ratdaddy/blockcloset/gantry/internal/config"
+	"github.com/ratdaddy/blockcloset/gantry/internal/database"
 	"github.com/ratdaddy/blockcloset/gantry/internal/grpcsvc"
 	"github.com/ratdaddy/blockcloset/gantry/internal/logger"
 	"github.com/ratdaddy/blockcloset/loggrpc"
@@ -26,6 +27,13 @@ func main() {
 
 	config.Init()
 	logger.Init()
+
+	db, cleanup, err := database.Init(ctx)
+	if err != nil {
+		slog.Error("database init failed", "err", err)
+		os.Exit(1)
+	}
+	defer cleanup()
 
 	addr := fmt.Sprintf(":%d", config.GantryPort)
 
@@ -49,7 +57,7 @@ func main() {
 		),
 	)
 
-	grpcsvc.Register(s, grpcsvc.New(slogger))
+	grpcsvc.Register(s, grpcsvc.New(slogger, db))
 	if config.EnableReflection {
 		slog.Info("grpc reflection enabled")
 		reflection.Register(s)

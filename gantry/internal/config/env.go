@@ -3,6 +3,7 @@ package config
 import (
 	"flag"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 )
@@ -36,9 +37,16 @@ var (
 	LogVerbosity     logVerbosityVal
 	EnableReflection bool
 	GantryPort       int
+	DatabasePath     string
 )
 
 func Init() {
+	if flag.Lookup("test.v") != nil {
+		_ = os.Setenv("APP_ENV", string(EnvTest))
+	} else if strings.TrimSpace(os.Getenv("APP_ENV")) == "" {
+		_ = os.Setenv("APP_ENV", string(EnvDevelopment))
+	}
+
 	AppEnv = parseEnv(os.Getenv("APP_ENV"))
 
 	switch AppEnv {
@@ -86,6 +94,8 @@ func Init() {
 			GantryPort = port
 		}
 	}
+
+	DatabasePath = resolveDatabasePath()
 }
 
 func parseEnv(v string) envVal {
@@ -105,5 +115,57 @@ func parseEnv(v string) envVal {
 		return EnvDevelopment
 	default:
 		return EnvDevelopment
+	}
+}
+
+func resolveDatabasePath() string {
+	if override := strings.TrimSpace(os.Getenv("GANTRY_DB_PATH")); override != "" {
+		return filepath.Clean(override)
+	}
+
+	filename := databaseFilename(AppEnv)
+
+	if baseDir := strings.TrimSpace(os.Getenv("GANTRY_DB_DIR")); baseDir != "" {
+		return filepath.Join(baseDir, filename)
+	}
+
+	if AppEnv == EnvTest {
+		if root := findModuleRoot(); root != "" {
+			return filepath.Join(root, "data", filename)
+		}
+	}
+
+	return filepath.Join(".", "data", filename)
+}
+
+func databaseFilename(env envVal) string {
+	switch env {
+	case EnvTest:
+		return "test.db"
+	case EnvProduction:
+		return "prod.db"
+	case EnvStaging:
+		return "staging.db"
+	default:
+		return "dev.db"
+	}
+}
+
+func findModuleRoot() string {
+	dir, err := os.Getwd()
+	if err != nil {
+		return ""
+	}
+
+	for {
+		if _, err := os.Stat(filepath.Join(dir, "go.mod")); err == nil {
+			return dir
+		}
+
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			return ""
+		}
+		dir = parent
 	}
 }

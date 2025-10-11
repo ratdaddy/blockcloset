@@ -19,6 +19,11 @@ BlockCloset will store Gantry’s local metadata in [SQLite](https://sqlite.org/
 
 The modernc driver keeps builds CGO-free so binaries cross-compile cleanly and avoid external toolchains, while still tracking upstream SQLite features closely.
 
+Implementation:
+- `gantry/internal/database` will own connection setup.
+- Domain packages will work directly with SQLite-backed structs under `gantry/internal/store` (e.g., `bucket.go`). These types will embed a `*sql.DB` and expose concrete methods (`Create`, `Get`, etc.) without introducing intermediate repository interfaces.
+- Database-facing structs (e.g., `bucketRecord`) remain separate from protobuf transports so persistence concerns stay decoupled from gRPC representations.
+
 ## Consequences
 
 - Enables durable local state without introducing an external database dependency.
@@ -26,6 +31,7 @@ The modernc driver keeps builds CGO-free so binaries cross-compile cleanly and a
 - Simplifies manual inspection (e.g., via the `sqlite3` CLI or GUI browsers) for troubleshooting upgrades.
 - Requires conscious coordination between migrations and Raft apply logic to avoid long-lived locks.
 - Adds the modernc driver dependency, which may trail official SQLite releases by a short window and has slightly higher CPU cost than CGO builds.
+- Couples Gantry’s data access directly to SQLite implementations; swapping back-ends later would require refactoring instead of interface substitution.
 
 ## Alternatives Considered
 

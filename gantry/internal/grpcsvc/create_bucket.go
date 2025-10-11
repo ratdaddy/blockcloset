@@ -2,12 +2,16 @@ package grpcsvc
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
+	"time"
 
+	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/ratdaddy/blockcloset/gantry/internal/store"
 	"github.com/ratdaddy/blockcloset/loggrpc"
 	"github.com/ratdaddy/blockcloset/pkg/storage/bucket"
 	bucketv1 "github.com/ratdaddy/blockcloset/proto/gen/gantry/bucket/v1"
@@ -32,6 +36,26 @@ func (s *Service) CreateBucket(ctx context.Context, req *servicev1.CreateBucketR
 
 	if name == "panic" {
 		panic(status.New(codes.Internal, "intentional test panic"))
+	}
+
+	id := uuid.NewString()
+	now := time.Now().UTC()
+	buckets := s.store.Buckets()
+
+	if _, err := buckets.Create(ctx, id, name, now); err != nil {
+		if errors.Is(err, store.ErrBucketAlreadyExists) {
+			conflict := &servicev1.BucketOwnershipConflict{
+				Reason: servicev1.BucketOwnershipConflict_REASON_BUCKET_ALREADY_OWNED_BY_YOU,
+				Bucket: name,
+			}
+			st := status.New(codes.AlreadyExists, err.Error())
+			withDetail, err := st.WithDetails(conflict)
+			if err != nil {
+				return nil, loggrpc.SetError(ctx, status.Error(codes.Internal, err.Error()))
+			}
+			return nil, loggrpc.SetError(ctx, withDetail.Err())
+		}
+		return nil, loggrpc.SetError(ctx, status.Error(codes.Internal, err.Error()))
 	}
 
 	loggrpc.SetAttrs(ctx, slog.String("result", fmt.Sprintf("bucket <%s> created", name)))
