@@ -82,6 +82,17 @@ jobs:
           git diff --exit-code -- go.mod go.sum || \
             (echo "::error ::${{ matrix.module }} go.mod/go.sum not tidy. Run 'go mod tidy' and commit." && exit 1)
 
+      - name: Install migrate CLI
+        if: matrix.module == 'gantry'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc libsqlite3-dev
+          CGO_ENABLED=1 go install -tags "sqlite sqlite3" github.com/golang-migrate/migrate/v4/cmd/migrate@v4.17.0
+
+      - name: Run migrations
+        if: matrix.module == 'gantry'
+        run: make migrate
+
       - name: Build (${{ matrix.module }})
         #working-directory: ${{ matrix.module }}
         run: go build ./...
