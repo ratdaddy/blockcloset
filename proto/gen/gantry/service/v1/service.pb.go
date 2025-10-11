@@ -211,6 +211,86 @@ func (x *BucketOwnershipConflict) GetBucket() string {
 	return ""
 }
 
+type ListBucketsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListBucketsRequest) Reset() {
+	*x = ListBucketsRequest{}
+	mi := &file_gantry_service_v1_service_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListBucketsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListBucketsRequest) ProtoMessage() {}
+
+func (x *ListBucketsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_gantry_service_v1_service_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListBucketsRequest.ProtoReflect.Descriptor instead.
+func (*ListBucketsRequest) Descriptor() ([]byte, []int) {
+	return file_gantry_service_v1_service_proto_rawDescGZIP(), []int{3}
+}
+
+type ListBucketsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Buckets       []*v1.Bucket           `protobuf:"bytes,1,rep,name=buckets,proto3" json:"buckets,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListBucketsResponse) Reset() {
+	*x = ListBucketsResponse{}
+	mi := &file_gantry_service_v1_service_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListBucketsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListBucketsResponse) ProtoMessage() {}
+
+func (x *ListBucketsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_gantry_service_v1_service_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListBucketsResponse.ProtoReflect.Descriptor instead.
+func (*ListBucketsResponse) Descriptor() ([]byte, []int) {
+	return file_gantry_service_v1_service_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *ListBucketsResponse) GetBuckets() []*v1.Bucket {
+	if x != nil {
+		return x.Buckets
+	}
+	return nil
+}
+
 var File_gantry_service_v1_service_proto protoreflect.FileDescriptor
 
 const file_gantry_service_v1_service_proto_rawDesc = "" +
@@ -226,9 +306,13 @@ const file_gantry_service_v1_service_proto_rawDesc = "" +
 	"\x06Reason\x12\x16\n" +
 	"\x12REASON_UNSPECIFIED\x10\x00\x12&\n" +
 	"\"REASON_BUCKET_ALREADY_OWNED_BY_YOU\x10\x01\x12 \n" +
-	"\x1cREASON_BUCKET_ALREADY_EXISTS\x10\x022p\n" +
+	"\x1cREASON_BUCKET_ALREADY_EXISTS\x10\x02\"\x14\n" +
+	"\x12ListBucketsRequest\"I\n" +
+	"\x13ListBucketsResponse\x122\n" +
+	"\abuckets\x18\x01 \x03(\v2\x18.gantry.bucket.v1.BucketR\abuckets2\xce\x01\n" +
 	"\rGantryService\x12_\n" +
-	"\fCreateBucket\x12&.gantry.service.v1.CreateBucketRequest\x1a'.gantry.service.v1.CreateBucketResponseB\xd2\x01\n" +
+	"\fCreateBucket\x12&.gantry.service.v1.CreateBucketRequest\x1a'.gantry.service.v1.CreateBucketResponse\x12\\\n" +
+	"\vListBuckets\x12%.gantry.service.v1.ListBucketsRequest\x1a&.gantry.service.v1.ListBucketsResponseB\xd2\x01\n" +
 	"\x15com.gantry.service.v1B\fServiceProtoP\x01ZEgithub.com/ratdaddy/blockcloset/proto/gen/gantry/service/v1;servicev1\xa2\x02\x03GSX\xaa\x02\x11Gantry.Service.V1\xca\x02\x11Gantry\\Service\\V1\xe2\x02\x1dGantry\\Service\\V1\\GPBMetadata\xea\x02\x13Gantry::Service::V1b\x06proto3"
 
 var (
@@ -244,24 +328,29 @@ func file_gantry_service_v1_service_proto_rawDescGZIP() []byte {
 }
 
 var file_gantry_service_v1_service_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_gantry_service_v1_service_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_gantry_service_v1_service_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_gantry_service_v1_service_proto_goTypes = []any{
 	(BucketOwnershipConflict_Reason)(0), // 0: gantry.service.v1.BucketOwnershipConflict.Reason
 	(*CreateBucketRequest)(nil),         // 1: gantry.service.v1.CreateBucketRequest
 	(*CreateBucketResponse)(nil),        // 2: gantry.service.v1.CreateBucketResponse
 	(*BucketOwnershipConflict)(nil),     // 3: gantry.service.v1.BucketOwnershipConflict
-	(*v1.Bucket)(nil),                   // 4: gantry.bucket.v1.Bucket
+	(*ListBucketsRequest)(nil),          // 4: gantry.service.v1.ListBucketsRequest
+	(*ListBucketsResponse)(nil),         // 5: gantry.service.v1.ListBucketsResponse
+	(*v1.Bucket)(nil),                   // 6: gantry.bucket.v1.Bucket
 }
 var file_gantry_service_v1_service_proto_depIdxs = []int32{
-	4, // 0: gantry.service.v1.CreateBucketResponse.bucket:type_name -> gantry.bucket.v1.Bucket
+	6, // 0: gantry.service.v1.CreateBucketResponse.bucket:type_name -> gantry.bucket.v1.Bucket
 	0, // 1: gantry.service.v1.BucketOwnershipConflict.reason:type_name -> gantry.service.v1.BucketOwnershipConflict.Reason
-	1, // 2: gantry.service.v1.GantryService.CreateBucket:input_type -> gantry.service.v1.CreateBucketRequest
-	2, // 3: gantry.service.v1.GantryService.CreateBucket:output_type -> gantry.service.v1.CreateBucketResponse
-	3, // [3:4] is the sub-list for method output_type
-	2, // [2:3] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	6, // 2: gantry.service.v1.ListBucketsResponse.buckets:type_name -> gantry.bucket.v1.Bucket
+	1, // 3: gantry.service.v1.GantryService.CreateBucket:input_type -> gantry.service.v1.CreateBucketRequest
+	4, // 4: gantry.service.v1.GantryService.ListBuckets:input_type -> gantry.service.v1.ListBucketsRequest
+	2, // 5: gantry.service.v1.GantryService.CreateBucket:output_type -> gantry.service.v1.CreateBucketResponse
+	5, // 6: gantry.service.v1.GantryService.ListBuckets:output_type -> gantry.service.v1.ListBucketsResponse
+	5, // [5:7] is the sub-list for method output_type
+	3, // [3:5] is the sub-list for method input_type
+	3, // [3:3] is the sub-list for extension type_name
+	3, // [3:3] is the sub-list for extension extendee
+	0, // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_gantry_service_v1_service_proto_init() }
@@ -275,7 +364,7 @@ func file_gantry_service_v1_service_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_gantry_service_v1_service_proto_rawDesc), len(file_gantry_service_v1_service_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   3,
+			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

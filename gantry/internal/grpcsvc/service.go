@@ -7,23 +7,20 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/ratdaddy/blockcloset/gantry/internal/store"
-	"github.com/ratdaddy/blockcloset/pkg/storage/bucket"
 	servicev1 "github.com/ratdaddy/blockcloset/proto/gen/gantry/service/v1"
 )
 
 type Service struct {
 	servicev1.UnimplementedGantryServiceServer
-	log       *slog.Logger
-	validator bucket.BucketNameValidator
-	db        *sql.DB
-	store     store.Store
+	log   *slog.Logger
+	db    *sql.DB
+	store store.Store
 }
 
 func New(log *slog.Logger, db *sql.DB) *Service {
 	svc := &Service{
-		log:       log,
-		validator: bucket.DefaultBucketNameValidator{},
-		db:        db,
+		log: log,
+		db:  db,
 	}
 
 	if db != nil {

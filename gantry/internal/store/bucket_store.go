@@ -43,3 +43,41 @@ func (s *bucketStore) Create(ctx context.Context, id string, name string, create
 
 	return BucketRecord{ID: id, Name: name, CreatedAt: createdAt, UpdatedAt: createdAt}, nil
 }
+
+func (s *bucketStore) List(ctx context.Context) ([]BucketRecord, error) {
+	const selectBuckets = `SELECT id, name, created_at, updated_at FROM buckets ORDER BY created_at ASC`
+
+	rows, err := s.db.QueryContext(ctx, selectBuckets)
+	if err != nil {
+		return nil, fmt.Errorf("list buckets: %w", err)
+	}
+	defer rows.Close()
+
+	var records []BucketRecord
+
+	for rows.Next() {
+		var (
+			rec       BucketRecord
+			createdAt string
+			updatedAt string
+		)
+
+		if err = rows.Scan(&rec.ID, &rec.Name, &createdAt, &updatedAt); err != nil {
+			return nil, fmt.Errorf("scan bucket: %w", err)
+		}
+
+		if rec.CreatedAt, err = time.Parse(time.RFC3339Nano, createdAt); err != nil {
+			return nil, fmt.Errorf("parse created_at: %w", err)
+		}
+		if rec.UpdatedAt, err = time.Parse(time.RFC3339Nano, updatedAt); err != nil {
+			return nil, fmt.Errorf("parse updated_at: %w", err)
+		}
+
+		records = append(records, rec)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate buckets: %w", err)
+	}
+
+	return records, nil
+}

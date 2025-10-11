@@ -22,12 +22,19 @@ type createBucketCall struct {
 	Request  *servicev1.CreateBucketRequest
 }
 
+type listBucketsCall struct {
+	Metadata metadata.MD
+	Request  *servicev1.ListBucketsRequest
+}
+
 type captureGantryService struct {
 	servicev1.UnimplementedGantryServiceServer
 
 	mu                 sync.Mutex
 	createBucketCalls  []createBucketCall
 	createBucketHookFn func(context.Context, *servicev1.CreateBucketRequest) (*servicev1.CreateBucketResponse, error)
+	listBucketCalls    []listBucketsCall
+	listBucketHookFn   func(context.Context, *servicev1.ListBucketsRequest) (*servicev1.ListBucketsResponse, error)
 }
 
 func newCaptureGantryService() *captureGantryService {
@@ -37,6 +44,7 @@ func newCaptureGantryService() *captureGantryService {
 func (s *captureGantryService) Reset() {
 	s.mu.Lock()
 	s.createBucketCalls = nil
+	s.listBucketCalls = nil
 	s.mu.Unlock()
 }
 
@@ -82,6 +90,51 @@ func (s *captureGantryService) CreateBucket(ctx context.Context, req *servicev1.
 	}
 
 	return &servicev1.CreateBucketResponse{Bucket: &bucketv1.Bucket{Name: req.GetName()}}, nil
+}
+
+func (s *captureGantryService) ListBuckets(ctx context.Context, req *servicev1.ListBucketsRequest) (*servicev1.ListBucketsResponse, error) {
+	call := listBucketsCall{
+		Request: proto.Clone(req).(*servicev1.ListBucketsRequest),
+	}
+
+	if md, ok := metadata.FromIncomingContext(ctx); ok {
+		call.Metadata = md.Copy()
+	}
+
+	s.mu.Lock()
+	s.listBucketCalls = append(s.listBucketCalls, call)
+	hook := s.listBucketHookFn
+	s.mu.Unlock()
+
+	if hook != nil {
+		return hook(ctx, req)
+	}
+
+	return &servicev1.ListBucketsResponse{}, nil
+}
+
+func (s *captureGantryService) ListBucketCalls() []listBucketsCall {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	calls := make([]listBucketsCall, len(s.listBucketCalls))
+	copy(calls, s.listBucketCalls)
+	return calls
+}
+
+func (s *captureGantryService) LastListBucketsCall() (listBucketsCall, bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if len(s.listBucketCalls) == 0 {
+		return listBucketsCall{}, false
+	}
+	return s.listBucketCalls[len(s.listBucketCalls)-1], true
+}
+
+func (s *captureGantryService) SetListBucketsHook(fn func(context.Context, *servicev1.ListBucketsRequest) (*servicev1.ListBucketsResponse, error)) {
+	s.mu.Lock()
+	s.listBucketHookFn = fn
+	s.mu.Unlock()
 }
 
 func newTestClient(t *testing.T) (*Client, *captureGantryService) {

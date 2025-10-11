@@ -5,6 +5,7 @@ go 1.24.6
 require (
 	github.com/go-chi/chi/v5 v5.2.2
 	github.com/go-chi/httplog/v3 v3.2.2
+	github.com/google/go-cmp v0.7.0
 	github.com/lmittmann/tint v1.1.2
 	github.com/oklog/ulid/v2 v2.1.1
 	github.com/ratdaddy/blockcloset/pkg v0.0.0

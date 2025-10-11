@@ -4,55 +4,81 @@ import (
 	"context"
 	"testing"
 
-	"github.com/ratdaddy/blockcloset/gateway/internal/httpapi"
+	"google.golang.org/grpc/metadata"
+
+	"github.com/ratdaddy/blockcloset/gateway/internal/requestid"
 )
 
 func TestClientRequestIDPropagation(t *testing.T) {
 	t.Parallel()
 
-	client, svc := newTestClient(t)
+	type call struct {
+		name   string
+		invoke func(*Client, context.Context) error
+		last   func(*captureGantryService) (metadata.MD, bool)
+	}
 
-	const bucketName = "case-bucket"
-
-	cases := []struct {
-		name string
-		ctx  func(*testing.T) context.Context
-		want []string
-	}{
+	cases := []call{
 		{
-			name: "with request id",
-			ctx:  func(*testing.T) context.Context { return httpapi.WithRequestID(context.Background(), "req-123") },
-			want: []string{"req-123"},
+			name: "CreateBucket",
+			invoke: func(client *Client, ctx context.Context) error {
+				_, err := client.CreateBucket(ctx, "bucket-one")
+				return err
+			},
+			last: func(svc *captureGantryService) (metadata.MD, bool) {
+				call, ok := svc.LastCreateBucketCall()
+				if !ok {
+					return nil, false
+				}
+				return call.Metadata, true
+			},
 		},
 		{
-			name: "without request id",
-			ctx:  func(*testing.T) context.Context { return context.Background() },
-			want: nil,
+			name: "ListBuckets",
+			invoke: func(client *Client, ctx context.Context) error {
+				_, err := client.ListBuckets(ctx)
+				return err
+			},
+			last: func(svc *captureGantryService) (metadata.MD, bool) {
+				call, ok := svc.LastListBucketsCall()
+				if !ok {
+					return nil, false
+				}
+				return call.Metadata, true
+			},
 		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			svc.Reset()
+			t.Parallel()
 
-			if _, err := client.CreateBucket(tc.ctx(t), bucketName); err != nil {
-				t.Fatalf("CreateBucket: %v", err)
+			client, svc := newTestClient(t)
+
+			ctxWithID := requestid.WithRequestID(context.Background(), "req-123")
+			if err := tc.invoke(client, ctxWithID); err != nil {
+				t.Fatalf("%s with request id: %v", tc.name, err)
 			}
 
-			call, ok := svc.LastCreateBucketCall()
+			md, ok := tc.last(svc)
 			if !ok {
-				t.Fatalf("expected CreateBucket call")
+				t.Fatalf("%s: expected call to be recorded", tc.name)
+			}
+			meta := md.Get("x-request-id")
+			if len(meta) != 1 || meta[0] != "req-123" {
+				t.Fatalf("%s metadata = %v, want [req-123]", tc.name, meta)
 			}
 
-			got := call.Metadata.Get("x-request-id")
-
-			if len(got) != len(tc.want) {
-				t.Fatalf("request id count: got %d want %d (values %v)", len(got), len(tc.want), got)
+			if err := tc.invoke(client, context.Background()); err != nil {
+				t.Fatalf("%s without request id: %v", tc.name, err)
 			}
-			for i := range tc.want {
-				if got[i] != tc.want[i] {
-					t.Fatalf("request id[%d] = %q, want %q", i, got[i], tc.want[i])
-				}
+
+			md, ok = tc.last(svc)
+			if !ok {
+				t.Fatalf("%s: expected call to be recorded", tc.name)
+			}
+			if meta := md.Get("x-request-id"); len(meta) != 0 {
+				t.Fatalf("%s metadata without id = %v, want []", tc.name, meta)
 			}
 		})
 	}

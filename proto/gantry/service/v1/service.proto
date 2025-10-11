@@ -7,6 +7,7 @@ import "gantry/bucket/v1/bucket.proto";
 
 service GantryService {
   rpc CreateBucket(CreateBucketRequest) returns (CreateBucketResponse);
+  rpc ListBuckets(ListBucketsRequest) returns (ListBucketsResponse);
 }
 
 message CreateBucketRequest {
@@ -26,4 +27,10 @@ message BucketOwnershipConflict {
 
   Reason reason = 1;
   string bucket = 2;
+}
+
+message ListBucketsRequest {}
+
+message ListBucketsResponse {
+  repeated gantry.bucket.v1.Bucket buckets = 1;
 }

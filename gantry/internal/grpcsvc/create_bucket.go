@@ -21,10 +21,7 @@ import (
 func (s *Service) CreateBucket(ctx context.Context, req *servicev1.CreateBucketRequest) (*servicev1.CreateBucketResponse, error) {
 	name := req.GetName()
 
-	validator := s.validator
-	if validator == nil {
-		validator = bucket.DefaultBucketNameValidator{}
-	}
+	validator := bucket.DefaultBucketNameValidator{}
 
 	if err := validator.ValidateBucketName(name); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())

@@ -5,9 +5,7 @@ import (
 	"errors"
 	"io"
 	"log/slog"
-	"sync"
 	"testing"
-	"time"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -79,7 +77,7 @@ func TestService_CreateBucket(t *testing.T) {
 			svc := New(logger, nil)
 			buckets := newFakeBucketStore()
 			if c.storeErr != nil {
-				buckets.err = c.storeErr
+				buckets.SetCreateError(c.storeErr)
 			}
 			svc.store = newFakeStore(buckets)
 
@@ -191,7 +189,7 @@ func assertNoResponse(t *testing.T, resp *servicev1.CreateBucketResponse) {
 	}
 }
 
-func assertStoreCreateCalled(t *testing.T, buckets *fakeBucketStore, wantName string) {
+func assertStoreCreateCalled(t *testing.T, buckets *bucketStoreFake, wantName string) {
 	t.Helper()
 
 	if buckets == nil {
@@ -219,7 +217,7 @@ func assertStoreCreateCalled(t *testing.T, buckets *fakeBucketStore, wantName st
 	}
 }
 
-func assertStoreNotCalled(t *testing.T, buckets *fakeBucketStore) {
+func assertStoreNotCalled(t *testing.T, buckets *bucketStoreFake) {
 	t.Helper()
 
 	if buckets == nil {
@@ -234,72 +232,3 @@ func assertStoreNotCalled(t *testing.T, buckets *fakeBucketStore) {
 func newDiscardLogger() *slog.Logger {
 	return slog.New(slog.NewTextHandler(io.Discard, &slog.HandlerOptions{}))
 }
-
-type bucketCreateCall struct {
-	ID        string
-	Name      string
-	CreatedAt time.Time
-}
-
-type fakeBucketStore struct {
-	mu     sync.Mutex
-	err    error
-	record store.BucketRecord
-	calls  []bucketCreateCall
-}
-
-var _ store.BucketStore = (*fakeBucketStore)(nil)
-
-func newFakeBucketStore() *fakeBucketStore {
-	return &fakeBucketStore{}
-}
-
-func (f *fakeBucketStore) Create(ctx context.Context, id string, name string, createdAt time.Time) (store.BucketRecord, error) {
-	f.mu.Lock()
-	defer f.mu.Unlock()
-
-	f.calls = append(f.calls, bucketCreateCall{
-		ID:        id,
-		Name:      name,
-		CreatedAt: createdAt,
-	})
-
-	if f.err != nil {
-		return store.BucketRecord{}, f.err
-	}
-
-	if f.record.Name == "" && f.record.CreatedAt.IsZero() && f.record.UpdatedAt.IsZero() {
-		f.record = store.BucketRecord{
-			ID:        id,
-			Name:      name,
-			CreatedAt: createdAt,
-			UpdatedAt: createdAt,
-		}
-	}
-
-	return f.record, nil
-}
-
-func (f *fakeBucketStore) Calls() []bucketCreateCall {
-	f.mu.Lock()
-	defer f.mu.Unlock()
-
-	calls := make([]bucketCreateCall, len(f.calls))
-	copy(calls, f.calls)
-
-	return calls
-}
-
-type fakeStore struct {
-	buckets store.BucketStore
-}
-
-func newFakeStore(buckets store.BucketStore) *fakeStore {
-	return &fakeStore{buckets: buckets}
-}
-
-func (f *fakeStore) Buckets() store.BucketStore {
-	return f.buckets
-}
-
-var _ store.Store = (*fakeStore)(nil)

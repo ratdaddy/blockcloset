@@ -20,6 +20,7 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	GantryService_CreateBucket_FullMethodName = "/gantry.service.v1.GantryService/CreateBucket"
+	GantryService_ListBuckets_FullMethodName  = "/gantry.service.v1.GantryService/ListBuckets"
 )
 
 // GantryServiceClient is the client API for GantryService service.
@@ -27,6 +28,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type GantryServiceClient interface {
 	CreateBucket(ctx context.Context, in *CreateBucketRequest, opts ...grpc.CallOption) (*CreateBucketResponse, error)
+	ListBuckets(ctx context.Context, in *ListBucketsRequest, opts ...grpc.CallOption) (*ListBucketsResponse, error)
 }
 
 type gantryServiceClient struct {
@@ -47,11 +49,22 @@ func (c *gantryServiceClient) CreateBucket(ctx context.Context, in *CreateBucket
 	return out, nil
 }
 
+func (c *gantryServiceClient) ListBuckets(ctx context.Context, in *ListBucketsRequest, opts ...grpc.CallOption) (*ListBucketsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListBucketsResponse)
+	err := c.cc.Invoke(ctx, GantryService_ListBuckets_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // GantryServiceServer is the server API for GantryService service.
 // All implementations must embed UnimplementedGantryServiceServer
 // for forward compatibility.
 type GantryServiceServer interface {
 	CreateBucket(context.Context, *CreateBucketRequest) (*CreateBucketResponse, error)
+	ListBuckets(context.Context, *ListBucketsRequest) (*ListBucketsResponse, error)
 	mustEmbedUnimplementedGantryServiceServer()
 }
 
@@ -64,6 +77,9 @@ type UnimplementedGantryServiceServer struct{}
 
 func (UnimplementedGantryServiceServer) CreateBucket(context.Context, *CreateBucketRequest) (*CreateBucketResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateBucket not implemented")
+}
+func (UnimplementedGantryServiceServer) ListBuckets(context.Context, *ListBucketsRequest) (*ListBucketsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListBuckets not implemented")
 }
 func (UnimplementedGantryServiceServer) mustEmbedUnimplementedGantryServiceServer() {}
 func (UnimplementedGantryServiceServer) testEmbeddedByValue()                       {}
@@ -104,6 +120,24 @@ func _GantryService_CreateBucket_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _GantryService_ListBuckets_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListBucketsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GantryServiceServer).ListBuckets(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GantryService_ListBuckets_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GantryServiceServer).ListBuckets(ctx, req.(*ListBucketsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // GantryService_ServiceDesc is the grpc.ServiceDesc for GantryService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -114,6 +148,10 @@ var GantryService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateBucket",
 			Handler:    _GantryService_CreateBucket_Handler,
+		},
+		{
+			MethodName: "ListBuckets",
+			Handler:    _GantryService_ListBuckets_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

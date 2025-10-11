@@ -1,20 +1,13 @@
 package main
 
 import (
-	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/ratdaddy/blockcloset/gateway/internal/httpapi"
+	"github.com/ratdaddy/blockcloset/gateway/internal/testutil"
 )
-
-type fakeGantry struct{ calls []string }
-
-func (f *fakeGantry) CreateBucket(ctx context.Context, name string) (string, error) {
-	f.calls = append(f.calls, name)
-	return "", nil
-}
 
 func TestMain_WiresAddressAndHandler(t *testing.T) {
 	t.Parallel()
@@ -22,7 +15,7 @@ func TestMain_WiresAddressAndHandler(t *testing.T) {
 	origBuild, origListen, origGantry := buildHandler, listenAndServe, gantryClient
 	defer func() { buildHandler, listenAndServe, gantryClient = origBuild, origListen, origGantry }()
 
-	fg := &fakeGantry{}
+	fg := testutil.NewGantryStub()
 	gantryClient = func(addr string) (httpapi.GantryClient, error) {
 		return fg, nil
 	}
