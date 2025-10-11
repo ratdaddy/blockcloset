@@ -19,8 +19,9 @@ Only ADRs in the **Adopted** state appear here.
 | [0005](0005-standardizing-environment-variable-for-application-runtime-mode.md) | Standardizing Environment Variable for Application Runtime Mode | Complete | Establishes a standard environment variable to define the application runtime mode (e.g., development, production). |
 | [0006](0006-structured-logging-with-slog-and-go-chi-httplog.md) | Structured Logging with slog and go-chi/httplog | Complete | Describes the adoption of structured logging using the slog package and integration with go-chi/httplog. |
 | [0007](0007-loggrpc-package-for-grpc-logging.md) | loggrpc Package for gRPC Logging | Complete | Introduces the loggrpc package to facilitate structured logging in gRPC services. |
-| [0008](0008-sqlite-for-local-metadata-store.md) | SQLite for Local Metadata Store | None | Chooses SQLite (via modernc driver) for per-node durable metadata storage. |
-| [0009](0009-schema-migrations-with-golang-migrate.md) | Schema Migrations with golang-migrate | None | Establishes golang-migrate as the standard tool for SQLite schema upgrades and rollbacks. |
+| [0008](0008-sqlite-for-local-metadata-store.md) | SQLite for Local Metadata Store | Complete | Chooses SQLite (via modernc driver) for per-node durable metadata storage. |
+| [0009](0009-schema-migrations-with-golang-migrate.md) | Schema Migrations with golang-migrate | Complete | Establishes golang-migrate as the standard tool for SQLite schema upgrades and rollbacks. |
+| [0010](0010-adoption-of-grpc-for-control-plane-api.md) | Adoption of gRPC for Control-Plane API | Complete | Documents the decision to expose Gantry’s control-plane API via gRPC contracts. |
 
 ---
 
