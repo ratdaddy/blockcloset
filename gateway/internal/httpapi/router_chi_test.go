@@ -1,30 +1,15 @@
 package httpapi_test
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"github.com/go-chi/chi/v5"
-
+	"github.com/ratdaddy/blockcloset/gateway/internal/gantry"
 	"github.com/ratdaddy/blockcloset/gateway/internal/httpapi"
-	_ "github.com/ratdaddy/blockcloset/gateway/internal/testutil"
+	"github.com/ratdaddy/blockcloset/gateway/internal/testutil"
 )
-
-type stubHandlers struct {
-	called     bool
-	lastBucket string
-	status     int
-}
-
-func (s *stubHandlers) CreateBucket(w http.ResponseWriter, r *http.Request) {
-	s.called = true
-	s.lastBucket = chi.URLParam(r, "bucket")
-	if s.status == 0 {
-		s.status = http.StatusCreated
-	}
-	w.WriteHeader(s.status)
-}
 
 func TestRouterChi_Routing(t *testing.T) {
 	t.Parallel()
@@ -34,33 +19,54 @@ func TestRouterChi_Routing(t *testing.T) {
 		method     string
 		target     string
 		wantStatus int
-		wantCalled bool
+		wantCalls  int
 		wantBucket string
 	}
 	cases := []tc{
-		{"PUT /{bucket} routes", http.MethodPut, "/alpha-bucket", 0, true, "alpha-bucket"},
-		{"trailing slash still matches", http.MethodPut, "/bravo/", 0, true, "bravo"},
-		{"GET wrong method => 404", http.MethodGet, "/alpha-bucket", http.StatusNotFound, false, ""},
-		{"subpath does not match", http.MethodPut, "/alpha-bucket/obj", http.StatusNotFound, false, ""},
+		{"PUT /{bucket} routes", http.MethodPut, "/alpha-bucket", http.StatusCreated, 1, "alpha-bucket"},
+		{"trailing slash still matches", http.MethodPut, "/bravo/", http.StatusCreated, 1, "bravo"},
+		{"GET list buckets", http.MethodGet, "/", http.StatusOK, 1, ""},
+		{"GET wrong path => 404", http.MethodGet, "/alpha-bucket", http.StatusNotFound, 0, ""},
+		{"subpath does not match", http.MethodPut, "/alpha-bucket/obj", http.StatusNotFound, 0, ""},
 	}
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			stub := &stubHandlers{}
-			r := httpapi.NewRouter(stub)
+			g := testutil.NewGantryStub()
+			if c.wantBucket != "" {
+				g.CreateFn = func(_ context.Context, name string) (string, error) {
+					return name, nil
+				}
+			}
+			if c.method == http.MethodGet && c.target == "/" {
+				g.ListFn = func(context.Context) ([]gantry.Bucket, error) {
+					return nil, nil
+				}
+			}
+
+			h := httpapi.NewHandlers(g)
+			r := httpapi.NewRouter(h)
 
 			rec := httptest.NewRecorder()
 			req := httptest.NewRequest(c.method, c.target, nil)
 			r.ServeHTTP(rec, req)
 
-			if c.wantStatus != 0 && rec.Code != c.wantStatus {
+			if rec.Code != c.wantStatus {
 				t.Fatalf("status: got %d, want %d", rec.Code, c.wantStatus)
 			}
-			if stub.called != c.wantCalled {
-				t.Fatalf("called: got %v, want %v", stub.called, c.wantCalled)
-			}
-			if c.wantCalled && stub.lastBucket != c.wantBucket {
-				t.Fatalf("bucket: got %q, want %q", stub.lastBucket, c.wantBucket)
+
+			switch c.method {
+			case http.MethodPut:
+				if got := len(g.CreateCalls); got != c.wantCalls {
+					t.Fatalf("create calls: got %d want %d (calls=%v)", got, c.wantCalls, g.CreateCalls)
+				}
+				if c.wantBucket != "" && g.CreateCalls[0] != c.wantBucket {
+					t.Fatalf("bucket: got %q, want %q", g.CreateCalls[0], c.wantBucket)
+				}
+			case http.MethodGet:
+				if got := g.ListCalls; got != c.wantCalls {
+					t.Fatalf("list calls: got %d want %d", got, c.wantCalls)
+				}
 			}
 		})
 	}

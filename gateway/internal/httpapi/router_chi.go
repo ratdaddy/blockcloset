@@ -7,11 +7,13 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 
 	"github.com/ratdaddy/blockcloset/gateway/internal/logger"
+	"github.com/ratdaddy/blockcloset/gateway/internal/requestid"
 	"github.com/ratdaddy/blockcloset/gateway/internal/respond"
 )
 
 type BucketHandlers interface {
 	CreateBucket(http.ResponseWriter, *http.Request)
+	ListBuckets(http.ResponseWriter, *http.Request)
 }
 
 func NewRouter(h BucketHandlers) http.Handler {
@@ -19,11 +21,12 @@ func NewRouter(h BucketHandlers) http.Handler {
 
 	mux.Use(logger.RequestLogger)
 
-	mux.Use(RequestID())
+	mux.Use(requestid.RequestID())
 
 	mux.Use(middleware.StripSlashes)
 
 	mux.Put("/{bucket}", h.CreateBucket)
+	mux.Get("/", h.ListBuckets)
 
 	mux.Get("/panic", func(w http.ResponseWriter, r *http.Request) {
 		panic("intentional test panic")

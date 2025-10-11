@@ -8,6 +8,7 @@ import (
 
 type BucketStore interface {
 	Create(ctx context.Context, id string, name string, createdAt time.Time) (BucketRecord, error)
+	List(ctx context.Context) ([]BucketRecord, error)
 }
 
 type Store interface {

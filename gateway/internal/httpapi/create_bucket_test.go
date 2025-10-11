@@ -12,7 +12,7 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"github.com/ratdaddy/blockcloset/gateway/internal/httpapi"
-	_ "github.com/ratdaddy/blockcloset/gateway/internal/testutil"
+	"github.com/ratdaddy/blockcloset/gateway/internal/testutil"
 	"github.com/ratdaddy/blockcloset/pkg/storage/bucket"
 	servicev1 "github.com/ratdaddy/blockcloset/proto/gen/gantry/service/v1"
 	"google.golang.org/grpc/codes"
@@ -35,16 +35,6 @@ type stubValidator struct {
 func (s *stubValidator) ValidateBucketName(name string) error {
 	s.calls = append(s.calls, name)
 	return s.err
-}
-
-type stubGantryClient struct {
-	calls []string
-	err   error
-}
-
-func (s *stubGantryClient) CreateBucket(ctx context.Context, name string) (string, error) {
-	s.calls = append(s.calls, name)
-	return "", s.err
 }
 
 func ownershipConflictErr(code codes.Code, message string, reason servicev1.BucketOwnershipConflict_Reason, bucket string) error {
@@ -161,7 +151,12 @@ func TestCreateBucket_ValidationGantryAndResponse(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			v := &stubValidator{err: c.validatorErr}
-			g := &stubGantryClient{err: c.gantryErr}
+			g := testutil.NewGantryStub()
+			if c.gantryErr != nil {
+				g.CreateFn = func(context.Context, string) (string, error) {
+					return "", c.gantryErr
+				}
+			}
 			h := &httpapi.Handlers{Validator: v, Gantry: g}
 
 			req := reqWithBucket(t, http.MethodPut, c.bucket)
@@ -174,12 +169,12 @@ func TestCreateBucket_ValidationGantryAndResponse(t *testing.T) {
 			}
 
 			if c.validatorErr == nil {
-				if len(g.calls) != 1 || g.calls[0] != c.bucket {
-					t.Fatalf("gantry create_bucket calls = %#v; want exactly [%q]", g.calls, c.bucket)
+				if len(g.CreateCalls) != 1 || g.CreateCalls[0] != c.bucket {
+					t.Fatalf("gantry create_bucket calls = %#v; want exactly [%q]", g.CreateCalls, c.bucket)
 				}
 			} else {
-				if len(g.calls) != 0 {
-					t.Fatalf("expected no gantry calls, got %#v", g.calls)
+				if len(g.CreateCalls) != 0 {
+					t.Fatalf("expected no gantry calls, got %#v", g.CreateCalls)
 				}
 			}
 

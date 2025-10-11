@@ -102,6 +102,10 @@ curl -i -X PUT --data '' http://$GATEWAY_ADDR/panic
 
 Grpcurl example to run directly with gantry:
 ```bash
+# reflection:
+grpcurl -plaintext $GANTRY_ADDR list gantry.service.v1.GantryService
+grpcurl -plaintext $GANTRY_ADDR describe gantry.service.v1.GantryService.ListBuckets
+
 # successful bucket creation:
 grpcurl -plaintext -d '{"name":"bucket"}' $GANTRY_ADDR gantry.service.v1.GantryService/CreateBucket
 
@@ -110,6 +114,8 @@ grpcurl -plaintext -d '{"name":"bad"}' $GANTRY_ADDR gantry.service.v1.GantryServ
 
 # panic:
 grpcurl -plaintext -d '{"name":"panic"}' $GANTRY_ADDR gantry.service.v1.GantryService/CreateBucket
-```
 
+# list buckets:
+grpcurl -plaintext -d '{}' $GANTRY_ADDR gantry.service.v1.GantryService/ListBuckets
+```
 ---

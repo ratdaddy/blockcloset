@@ -7,7 +7,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 
-	"github.com/ratdaddy/blockcloset/gateway/internal/httpapi"
+	"github.com/ratdaddy/blockcloset/gateway/internal/requestid"
 	servicev1 "github.com/ratdaddy/blockcloset/proto/gen/gantry/service/v1"
 )
 
@@ -34,7 +34,7 @@ func New(ctx context.Context, address string, opts ...grpc.DialOption) (*Client,
 
 func requestIDUnaryInterceptor() grpc.UnaryClientInterceptor {
 	return func(ctx context.Context, method string, req, reply any, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
-		if id := httpapi.RequestIDFromContext(ctx); id != "" {
+		if id := requestid.RequestIDFromContext(ctx); id != "" {
 			ctx = metadata.AppendToOutgoingContext(ctx, "x-request-id", id)
 		}
 		return invoker(ctx, method, req, reply, cc, opts...)

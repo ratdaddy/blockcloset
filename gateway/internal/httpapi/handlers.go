@@ -1,14 +1,6 @@
 package httpapi
 
-import (
-	"context"
-
-	"github.com/ratdaddy/blockcloset/pkg/storage/bucket"
-)
-
-type GantryClient interface {
-	CreateBucket(ctx context.Context, name string) (string, error)
-}
+import "github.com/ratdaddy/blockcloset/pkg/storage/bucket"
 
 type Handlers struct {
 	Validator bucket.BucketNameValidator

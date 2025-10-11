@@ -77,6 +77,108 @@ func TestBucketStore_Create(t *testing.T) {
 	}
 }
 
+func TestBucketStore_List(t *testing.T) {
+	t.Parallel()
+
+	type seed struct {
+		id   string
+		name string
+		at   time.Time
+	}
+
+	base := time.Date(2025, time.January, 1, 12, 0, 0, 0, time.UTC)
+
+	type tc struct {
+		name        string
+		seeds       []seed
+		setupDB     func(*testing.T, *sql.DB)
+		wantOrder   []seed
+		expectError bool
+	}
+
+	cases := []tc{
+		{
+			name: "returns buckets oldest first",
+			seeds: []seed{
+				{id: "bucket-oldest", name: "first-bucket", at: base.Add(-2 * time.Hour)},
+				{id: "bucket-newest", name: "second-bucket", at: base.Add(3 * time.Hour)},
+				{id: "bucket-middle", name: "middle-bucket", at: base},
+			},
+			wantOrder: []seed{
+				{id: "bucket-oldest", name: "first-bucket", at: base.Add(-2 * time.Hour)},
+				{id: "bucket-middle", name: "middle-bucket", at: base},
+				{id: "bucket-newest", name: "second-bucket", at: base.Add(3 * time.Hour)},
+			},
+		},
+		{
+			name: "propagates query errors",
+			setupDB: func(t *testing.T, db *sql.DB) {
+				t.Helper()
+				if err := db.Close(); err != nil {
+					t.Fatalf("close db: %v", err)
+				}
+			},
+			expectError: true,
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+
+			ctx := context.Background()
+			db := openIsolatedDB(t)
+			s := store.NewBucketStore(db)
+
+			if c.setupDB != nil {
+				c.setupDB(t, db)
+			} else {
+				for _, seed := range c.seeds {
+					ts := seed.at.UTC().Truncate(time.Microsecond)
+					if _, err := s.Create(ctx, seed.id, seed.name, ts); err != nil {
+						t.Fatalf("seed create %q: %v", seed.name, err)
+					}
+				}
+			}
+
+			records, err := s.List(ctx)
+
+			if c.expectError {
+				if err == nil {
+					t.Fatal("List: expected error, got nil")
+				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("List: unexpected error: %v", err)
+			}
+
+			if len(records) != len(c.wantOrder) {
+				t.Fatalf("List: got %d records, want %d", len(records), len(c.wantOrder))
+			}
+
+			for i, want := range c.wantOrder {
+				wantTime := want.at.UTC().Truncate(time.Microsecond)
+				got := records[i]
+
+				if got.ID != want.id {
+					t.Fatalf("List[%d]: id mismatch: got %q want %q", i, got.ID, want.id)
+				}
+				if got.Name != want.name {
+					t.Fatalf("List[%d]: name mismatch: got %q want %q", i, got.Name, want.name)
+				}
+				if !got.CreatedAt.Equal(wantTime) {
+					t.Fatalf("List[%d]: created_at mismatch: got %s want %s", i, got.CreatedAt, wantTime)
+				}
+				if !got.UpdatedAt.Equal(wantTime) {
+					t.Fatalf("List[%d]: updated_at mismatch: got %s want %s", i, got.UpdatedAt, wantTime)
+				}
+			}
+		})
+	}
+}
+
 func assertBucketRecord(t *testing.T, ctx context.Context, db *sql.DB, rec store.BucketRecord, expectedID string, expectedStamp time.Time) {
 	t.Helper()
 

@@ -1,4 +1,4 @@
-package httpapi
+package requestid
 
 import (
 	"context"
@@ -26,7 +26,7 @@ const (
 
 var (
 	ulidMu      sync.Mutex
-	ulidEntropy = ulid.Monotonic(rand.Reader, 0) // monotonic across same ms
+	ulidEntropy = ulid.Monotonic(rand.Reader, 0)
 )
 
 func RequestIDFromContext(ctx context.Context) string {
@@ -45,7 +45,7 @@ func defaultID() string {
 	ulidMu.Lock()
 	id := ulid.MustNew(ulid.Timestamp(time.Now()), ulidEntropy)
 	ulidMu.Unlock()
-	return id.String() // 26 chars, Crockford base32
+	return id.String()
 }
 
 func RequestID() func(http.Handler) http.Handler {
