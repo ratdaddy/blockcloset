@@ -3,8 +3,8 @@
 - Maintain this document by keeping the short bullet-oriented sections.
 
 ## Project Structure & Module Organization
-- `gateway/` delivers the public API and future admin UI
-    - keep HTTP handlers in `cmd/gateway` and service logic inside `gateway/internal/`.
+- `flatbed/` delivers the public API and future admin UI
+    - keep HTTP handlers in `cmd/flatbed` and service logic inside `flatbed/internal/`.
 - `gantry/` runs the control plane
     - entrypoints in `cmd/gantry` and domain code in `gantry/internal/`.
 - Shared protobuf contracts live in `proto/` with generated Go under `proto/gen/`
@@ -20,10 +20,10 @@
 ## Environment & Configuration
 - Load shared settings via `direnv`, sourcing `env/.env.development`
     - place machine-specific overrides in `env/.env.local` and keep them untracked.
-- Services read `GATEWAY_*` and `GANTRY_*` variables, so adjust both sets when changing local ports, hosts, or TLS-related options.
+- Services read `FLATBED_*` and `GANTRY_*` variables, so adjust both sets when changing local ports, hosts, or TLS-related options.
 
 ## Build, Test, and Development Commands
-- `make run` (from `gateway/` or `gantry/`) executes the service once with the current config
+- `make run` (from `flatbed/` or `gantry/`) executes the service once with the current config
 - `make dev` hot-reloads using `entr`.
 - `make test` runs the full Go unit suite
 - `make testdev` watches files and reruns tests with timestamps for tight inner loops.
@@ -36,7 +36,7 @@
 - keep imports grouped standard/third-party/internal and avoid unused exports.
     - Use a blank line between groups, sorted alphabetically within each group.
 - Use lowercase package directories and filenames that match the primary type or feature (e.g., `router.go`, `config.go`).
-- Prefer context-aware logging through the shared `log/slog` helpers (`gateway/internal/logger`, `gantry/internal/logger`)
+- Prefer context-aware logging through the shared `log/slog` helpers (`flatbed/internal/logger`, `gantry/internal/logger`)
 - keep public structs slim with explicit JSON/proto tags when exposed.
 - No trailing whitespace in any files, including documentation. All files end with a newline.
 - When editing files that already contain user changes, assume those edits are intentional (e.g., `production.db` renamed to `prod.db`) and preserve them unless explicitly told otherwise.
@@ -51,7 +51,7 @@
 - Co-locate table-driven tests as `<name>_test.go` using the Go `testing` package, mirroring the directory of the code under test.
 - Run `go test ./...` (or `go test -cover ./...` for critical changes) in both services before pushing.
 - Favor interface fakes over network calls
-- reference existing patterns in `gateway/internal/httpapi` and `gantry/internal/grpcsvc` for helpers.
+- reference existing patterns in `flatbed/internal/httpapi` and `gantry/internal/grpcsvc` for helpers.
 - Do not ship new production behavior without a failing test in place unless the requester explicitly approves it first.
 - After writing a new test do not write the production behavior until told to do so by the requester.
 

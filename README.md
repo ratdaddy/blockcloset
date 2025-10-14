@@ -51,19 +51,19 @@ At present:
 
 The system is composed of several cooperating components:
 
-- **API / Gateway**
+- **API: Flatbed**
   Handles incoming client requests, provides the object store API, and serves the administrative UI.
 
-- **Control Plane**
+- **Control Plane: Gantry**
   Manages cluster membership, replication policies, and metadata about stored objects.
 
-- **Storage Nodes**
-  Store object data as blocks on local disks, participate in replication, and serve data to the gateway.
+- **Storage Nodes: Cradle**
+  Store object data as blocks on local disks, participate in replication, and serve data to the flatbed.
 
 - **Management Tools**
   Expose health metrics, cluster state, and diagnostic information.
 
-Multiple node types will exist—for example, storage nodes, gateway/control-plane nodes, or combined roles in smaller deployments.
+Multiple node types will exist—for example, storage nodes, flatbed/control-plane nodes, or combined roles in smaller deployments.
 
 ---
 
@@ -76,28 +76,28 @@ Multiple node types will exist—for example, storage nodes, gateway/control-pla
 - **Initial Focus**
   The first milestone will be:
   1. Establishing strong foundations for development and operations, including build tooling, deployment scripts, and observability basics.
-  2. Implementing the API/Gateway component with object upload/download endpoints and the beginnings of the administrative UI.
+  2. Implementing the API/Flatbed component with object upload/download endpoints and the beginnings of the administrative UI.
   3. Integrating basic storage-node interaction and simple replication between nodes.
 
 ---
 
 ## Running locally
 
-In the gateway and gantry directories run the app with `make run`.
+In the flatbed and gantry directories run the app with `make run`.
 
-Curl examples to run through gateway:
+Curl examples to run through flatbed:
 ```bash
 # successful bucket creation:
-curl -i -X PUT --data '' http://$GATEWAY_ADDR/hello
+curl -i -X PUT --data '' http://$FLATBED_ADDR/hello
 
 # attempt to create a bucket with an invalid name:
-curl -i -X PUT --data '' http://$GATEWAY_ADDR/invalid_name!
+curl -i -X PUT --data '' http://$FLATBED_ADDR/invalid_name!
 
 # attempt to create a bucket with an invalid filename (as seen by gantry):
-curl -i -X PUT --data '' http://$GATEWAY_ADDR/bad
+curl -i -X PUT --data '' http://$FLATBED_ADDR/bad
 
 # panic gantry:
-curl -i -X PUT --data '' http://$GATEWAY_ADDR/panic
+curl -i -X PUT --data '' http://$FLATBED_ADDR/panic
 ```
 
 Grpcurl example to run directly with gantry:
