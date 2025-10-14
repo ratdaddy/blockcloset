@@ -6,7 +6,7 @@
 
 ## Context
 
-The initial HTTP implementation for gateway services used Go’s standard library `http.ServeMux`. While sufficient for minimal prototypes, it lacks built-in support for path parameters, middleware composition, and more flexible route matching.
+The initial HTTP implementation for flatbed services used Go’s standard library `http.ServeMux`. While sufficient for minimal prototypes, it lacks built-in support for path parameters, middleware composition, and more flexible route matching.
 
 As the project grows, routing requirements will expand to include:
 

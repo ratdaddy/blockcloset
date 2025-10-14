@@ -31,8 +31,8 @@ services:
     depends_on:
       - loki
 
-  gateway:
-    image: gateway:dev
+  flatbed:
+    image: flatbed:dev
     environment:
       LOG_FORMAT: json
       LOG_VERBOSITY: verbose
@@ -43,7 +43,7 @@ services:
       options:
         syslog-address: "udp://127.0.0.1:5514"
         syslog-format: "rfc5424micro"
-        tag: "gateway"
+        tag: "flatbed"
         mode: "non-blocking"
         max-buffer-size: "4m"
     depends_on: [otel-collector]

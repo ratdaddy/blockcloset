@@ -8,7 +8,7 @@
 
 The Gantry service provides BlockCloset’s control plane: creating buckets, managing placement metadata, and coordinating future replication and lifecycle workflows. It should expose an internal API that is:
 
-- Strongly typed so the gateway, admin UI, background jobs, and tooling share the same schema.
+- Strongly typed so that flatbed, admin UI, background jobs, and tooling share the same schema.
 - Evolvable without breaking callers, supporting backwards-compatible field additions, explicit versioning, and robust metadata handling.
 - Observable through OpenTelemetry, tying into the emerging `loggrpc` instrumentation (ADR 0007) and existing tracing/metrics pipelines living in `otel/`.
 - Efficient for low-latency operations that run on the same trusted network as other BlockCloset services.
@@ -21,8 +21,8 @@ Gantry’s control-plane API will be delivered exclusively via gRPC. Protobuf de
 
 - Enables code-generated clients and servers across services, ensuring consistency and minimizing hand-written serialization.
 - Aligns control-plane observability with `loggrpc` interceptors and OTEL exporters, simplifying cross-service tracing.
-- Provides builtin gRPC features (metadata, deadlines, retries) that the gateway can leverage when translating S3-style HTTP requests.
-- Introduces a translation boundary inside the gateway: HTTP requests must be mapped to gRPC calls, and failure semantics must be mirrored (e.g., HTTP 500 ↔ `codes.Internal` per project error policy).
+- Provides builtin gRPC features (metadata, deadlines, retries) that flatbed can leverage when translating S3-style HTTP requests.
+- Introduces a translation boundary inside flatbed: HTTP requests must be mapped to gRPC calls, and failure semantics must be mirrored (e.g., HTTP 500 ↔ `codes.Internal` per project error policy).
 - Requires gRPC-aware infrastructure (load balancers, health checks) for multi-instance deployments; tooling like gRPC reflection remains optional but recommended for local introspection.
 
 ## Alternatives Considered

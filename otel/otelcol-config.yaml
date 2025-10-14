@@ -8,7 +8,7 @@ processors:
   resource:
     attributes:
       - key: service.name
-        value: gateway
+        value: flatbed
         action: upsert
   batch: {}
   transform/jsonify:
