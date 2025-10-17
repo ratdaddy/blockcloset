@@ -7,7 +7,6 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -35,11 +34,11 @@ func (s *Service) CreateBucket(ctx context.Context, req *servicev1.CreateBucketR
 		panic(status.New(codes.Internal, "intentional test panic"))
 	}
 
-	id := uuid.NewString()
+	bucketID := store.NewID()
 	now := time.Now().UTC()
 	buckets := s.store.Buckets()
 
-	if _, err := buckets.Create(ctx, id, name, now); err != nil {
+	if _, err := buckets.Create(ctx, bucketID, name, now); err != nil {
 		if errors.Is(err, store.ErrBucketAlreadyExists) {
 			conflict := &servicev1.BucketOwnershipConflict{
 				Reason: servicev1.BucketOwnershipConflict_REASON_BUCKET_ALREADY_OWNED_BY_YOU,

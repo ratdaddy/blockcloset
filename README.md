@@ -51,16 +51,16 @@ At present:
 
 The system is composed of several cooperating components:
 
-- **API: Flatbed**
+- **API: Flatbed** -
   Handles incoming client requests, provides the object store API, and serves the administrative UI.
 
-- **Control Plane: Gantry**
+- **Control Plane: Gantry** -
   Manages cluster membership, replication policies, and metadata about stored objects.
 
-- **Storage Nodes: Cradle**
+- **Storage Nodes: Cradle** -
   Store object data as blocks on local disks, participate in replication, and serve data to the flatbed.
 
-- **Management Tools**
+- **Management Tools** -
   Expose health metrics, cluster state, and diagnostic information.
 
 Multiple node types will exist—for example, storage nodes, flatbed/control-plane nodes, or combined roles in smaller deployments.

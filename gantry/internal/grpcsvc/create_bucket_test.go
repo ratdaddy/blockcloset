@@ -10,7 +10,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/google/uuid"
+	"github.com/oklog/ulid/v2"
 	"github.com/ratdaddy/blockcloset/gantry/internal/store"
 	"github.com/ratdaddy/blockcloset/pkg/storage/bucket"
 	servicev1 "github.com/ratdaddy/blockcloset/proto/gen/gantry/service/v1"
@@ -205,8 +205,8 @@ func assertStoreCreateCalled(t *testing.T, buckets *bucketStoreFake, wantName st
 	if call.ID == "" {
 		t.Fatal("bucket store id not populated")
 	}
-	if _, err := uuid.Parse(call.ID); err != nil {
-		t.Fatalf("bucket store id: %q not a valid UUID: %v", call.ID, err)
+	if _, err := ulid.Parse(call.ID); err != nil {
+		t.Fatalf("bucket store id: %q not a valid ULID: %v", call.ID, err)
 	}
 	if call.Name != wantName {
 		t.Fatalf("bucket store name: got %q, want %q", call.Name, wantName)

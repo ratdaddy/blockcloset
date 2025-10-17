@@ -3,9 +3,9 @@ module github.com/ratdaddy/blockcloset/gantry
 go 1.24.6
 
 require (
-	github.com/google/uuid v1.6.0
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.2
 	github.com/lmittmann/tint v1.1.2
+	github.com/oklog/ulid/v2 v2.1.1
 	github.com/ratdaddy/blockcloset/loggrpc v0.0.0
 	github.com/ratdaddy/blockcloset/pkg v0.0.0
 	github.com/ratdaddy/blockcloset/proto v0.0.0
@@ -16,6 +16,7 @@ require (
 
 require (
 	github.com/dustin/go-humanize v1.0.1 // indirect
+	github.com/google/uuid v1.6.0 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/ncruces/go-strftime v0.1.9 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect

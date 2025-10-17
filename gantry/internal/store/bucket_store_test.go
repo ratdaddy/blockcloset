@@ -182,6 +182,8 @@ func TestBucketStore_List(t *testing.T) {
 func assertBucketRecord(t *testing.T, ctx context.Context, db *sql.DB, rec store.BucketRecord, expectedID string, expectedStamp time.Time) {
 	t.Helper()
 
+	wantStamp := expectedStamp.UTC().Truncate(time.Microsecond)
+
 	if rec.ID != expectedID {
 		t.Fatalf("Create: id mismatch: got %q want %q", rec.ID, expectedID)
 	}
@@ -205,8 +207,8 @@ func assertBucketRecord(t *testing.T, ctx context.Context, db *sql.DB, rec store
 	var (
 		storedID        string
 		storedName      string
-		storedCreatedAt string
-		storedUpdatedAt string
+		storedCreatedAt int64
+		storedUpdatedAt int64
 	)
 
 	query := `SELECT id, name, created_at, updated_at FROM buckets WHERE name = ?`
@@ -222,26 +224,18 @@ func assertBucketRecord(t *testing.T, ctx context.Context, db *sql.DB, rec store
 		t.Fatalf("stored name mismatch: got %q want %q", storedName, rec.Name)
 	}
 
-	createdAt, err := time.Parse(time.RFC3339Nano, storedCreatedAt)
-	if err != nil {
-		t.Fatalf("parse created_at: %v", err)
+	createdAt := time.UnixMicro(storedCreatedAt).UTC()
+	updatedAt := time.UnixMicro(storedUpdatedAt).UTC()
+
+	if !rec.CreatedAt.Equal(wantStamp) {
+		t.Fatalf("returned CreatedAt mismatch: got %s want %s", rec.CreatedAt, wantStamp)
 	}
 
-	updatedAt, err := time.Parse(time.RFC3339Nano, storedUpdatedAt)
-	if err != nil {
-		t.Fatalf("parse updated_at: %v", err)
+	if !rec.UpdatedAt.Equal(wantStamp) {
+		t.Fatalf("returned UpdatedAt mismatch: got %s want %s", rec.UpdatedAt, wantStamp)
 	}
 
-	if !rec.CreatedAt.Equal(expectedStamp) {
-		t.Fatalf("returned CreatedAt mismatch: got %s want %s", rec.CreatedAt, createdAt)
-	}
-
-	if !rec.UpdatedAt.Equal(expectedStamp) {
-		t.Fatalf("returned UpdatedAt mismatch: got %s want %s", rec.UpdatedAt, updatedAt)
-	}
-
-	wantTimestamp := expectedStamp.Truncate(time.Microsecond)
-	if !createdAt.Equal(wantTimestamp) || !updatedAt.Equal(wantTimestamp) {
-		t.Fatalf("stored timestamps mismatch: got created=%s updated=%s want %s", createdAt, updatedAt, wantTimestamp)
+	if !createdAt.Equal(wantStamp) || !updatedAt.Equal(wantStamp) {
+		t.Fatalf("stored timestamps mismatch: got created=%s updated=%s want %s", createdAt, updatedAt, wantStamp)
 	}
 }
