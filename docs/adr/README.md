@@ -22,6 +22,7 @@ Only ADRs in the **Adopted** state appear here.
 | [0008](0008-sqlite-for-local-metadata-store.md) | SQLite for Local Metadata Store | Complete | Chooses SQLite (via modernc driver) for per-node durable metadata storage. |
 | [0009](0009-schema-migrations-with-golang-migrate.md) | Schema Migrations with golang-migrate | Complete | Establishes golang-migrate as the standard tool for SQLite schema upgrades and rollbacks. |
 | [0010](0010-adoption-of-grpc-for-control-plane-api.md) | Adoption of gRPC for Control-Plane API | Complete | Documents the decision to expose Gantry’s control-plane API via gRPC contracts. |
+| [0011](0011-gantry-schema-conventions.md) | Gantry Schema Conventions | Complete | Establishes ID, timestamp, and indexing standards for Gantry persistence. |
 
 ---
 
