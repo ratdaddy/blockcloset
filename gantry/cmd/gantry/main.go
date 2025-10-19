@@ -14,10 +14,12 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
+	"github.com/ratdaddy/blockcloset/gantry/internal/bootstrap"
 	"github.com/ratdaddy/blockcloset/gantry/internal/config"
 	"github.com/ratdaddy/blockcloset/gantry/internal/database"
 	"github.com/ratdaddy/blockcloset/gantry/internal/grpcsvc"
 	"github.com/ratdaddy/blockcloset/gantry/internal/logger"
+	"github.com/ratdaddy/blockcloset/gantry/internal/store"
 	"github.com/ratdaddy/blockcloset/loggrpc"
 )
 
@@ -34,6 +36,11 @@ func main() {
 		os.Exit(1)
 	}
 	defer cleanup()
+
+	if err := bootstrap.Init(ctx, store.New(db)); err != nil {
+		slog.Error("bootstrap init failed", "err", err)
+		os.Exit(1)
+	}
 
 	addr := fmt.Sprintf(":%d", config.GantryPort)
 

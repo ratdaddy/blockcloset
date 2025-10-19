@@ -40,6 +40,7 @@
 - keep public structs slim with explicit JSON/proto tags when exposed.
 - No trailing whitespace in any files, including documentation. All files end with a newline.
 - When editing files that already contain user changes, assume those edits are intentional (e.g., `production.db` renamed to `prod.db`) and preserve them unless explicitly told otherwise.
+- Never remove files without obtaining explicit approval first.
 
 ## API Semantics & Error Handling
 - Mirror AWS S3 responses:

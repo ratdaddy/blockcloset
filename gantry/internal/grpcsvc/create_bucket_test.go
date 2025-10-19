@@ -12,6 +12,7 @@ import (
 
 	"github.com/oklog/ulid/v2"
 	"github.com/ratdaddy/blockcloset/gantry/internal/store"
+	"github.com/ratdaddy/blockcloset/gantry/internal/testutil"
 	"github.com/ratdaddy/blockcloset/pkg/storage/bucket"
 	servicev1 "github.com/ratdaddy/blockcloset/proto/gen/gantry/service/v1"
 )
@@ -75,11 +76,11 @@ func TestService_CreateBucket(t *testing.T) {
 
 			logger := newDiscardLogger()
 			svc := New(logger, nil)
-			buckets := newFakeBucketStore()
+			buckets := testutil.NewFakeBucketStore()
 			if c.storeErr != nil {
 				buckets.SetCreateError(c.storeErr)
 			}
-			svc.store = newFakeStore(buckets)
+			svc.store = testutil.NewFakeStore(buckets, nil)
 
 			resp, err := svc.CreateBucket(context.Background(), &servicev1.CreateBucketRequest{Name: c.bucket})
 
@@ -189,7 +190,7 @@ func assertNoResponse(t *testing.T, resp *servicev1.CreateBucketResponse) {
 	}
 }
 
-func assertStoreCreateCalled(t *testing.T, buckets *bucketStoreFake, wantName string) {
+func assertStoreCreateCalled(t *testing.T, buckets *testutil.BucketStoreFake, wantName string) {
 	t.Helper()
 
 	if buckets == nil {
@@ -217,7 +218,7 @@ func assertStoreCreateCalled(t *testing.T, buckets *bucketStoreFake, wantName st
 	}
 }
 
-func assertStoreNotCalled(t *testing.T, buckets *bucketStoreFake) {
+func assertStoreNotCalled(t *testing.T, buckets *testutil.BucketStoreFake) {
 	t.Helper()
 
 	if buckets == nil {
