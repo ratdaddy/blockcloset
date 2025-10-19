@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc/codes"
 
 	"github.com/ratdaddy/blockcloset/gantry/internal/store"
+	"github.com/ratdaddy/blockcloset/gantry/internal/testutil"
 	servicev1 "github.com/ratdaddy/blockcloset/proto/gen/gantry/service/v1"
 )
 
@@ -70,11 +71,11 @@ func TestService_ListBuckets(t *testing.T) {
 			logger := newDiscardLogger()
 			svc := New(logger, nil)
 
-			buckets := newFakeBucketStore()
+			buckets := testutil.NewFakeBucketStore()
 			buckets.SetListRecords(c.records)
 			buckets.SetListError(c.listErr)
 
-			svc.store = newFakeStore(buckets)
+			svc.store = testutil.NewFakeStore(buckets, nil)
 
 			resp, err := svc.ListBuckets(context.Background(), &servicev1.ListBucketsRequest{})
 
@@ -130,7 +131,7 @@ func formatBucketTimestamp(t time.Time) string {
 	return t.UTC().Format("2006-01-02T15:04:05.000000Z")
 }
 
-func assertListInvocation(t *testing.T, s *bucketStoreFake, wantCall bool) {
+func assertListInvocation(t *testing.T, s *testutil.BucketStoreFake, wantCall bool) {
 	t.Helper()
 
 	got := s.ListCallCount()

@@ -11,20 +11,31 @@ type BucketStore interface {
 	List(ctx context.Context) ([]BucketRecord, error)
 }
 
+type CradleServerStore interface {
+	Upsert(ctx context.Context, id string, address string, createdAt time.Time) (CradleServerRecord, error)
+}
+
 type Store interface {
 	Buckets() BucketStore
+	CradleServers() CradleServerStore
 }
 
 type sqlStore struct {
-	buckets BucketStore
+	buckets       BucketStore
+	cradleServers CradleServerStore
 }
 
 func New(db *sql.DB) Store {
 	return &sqlStore{
-		buckets: NewBucketStore(db),
+		buckets:       NewBucketStore(db),
+		cradleServers: NewCradleServerStore(db),
 	}
 }
 
 func (s *sqlStore) Buckets() BucketStore {
 	return s.buckets
+}
+
+func (s *sqlStore) CradleServers() CradleServerStore {
+	return s.cradleServers
 }

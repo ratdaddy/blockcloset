@@ -38,6 +38,8 @@ var (
 	EnableReflection bool
 	GantryPort       int
 	DatabasePath     string
+	CradleServerID   string
+	CradleAddr       string
 )
 
 func Init() {
@@ -93,6 +95,10 @@ func Init() {
 		if port, err := strconv.Atoi(v); err == nil && port > 0 && port < 65536 {
 			GantryPort = port
 		}
+	}
+
+	if v := strings.TrimSpace(os.Getenv("GANTRY_CRADLE_ADDR")); v != "" {
+		CradleAddr = v
 	}
 
 	DatabasePath = resolveDatabasePath()

@@ -14,22 +14,22 @@ func TestBucketStore_Create(t *testing.T) {
 	t.Parallel()
 
 	type tc struct {
+		id      string
 		name    string
 		setup   func(context.Context, *testing.T, store.BucketStore, time.Time)
-		id      string
 		bucket  string
 		wantErr error
 	}
 
 	cases := []tc{
 		{
-			name:   "creates bucket",
 			id:     "bucket-id-123",
+			name:   "creates bucket",
 			bucket: "integration-bucket",
 		},
 		{
-			name:   "duplicate bucket name returns error",
 			id:     "bucket-id-456",
+			name:   "duplicate bucket name returns error",
 			bucket: "existing-bucket",
 			setup: func(ctx context.Context, t *testing.T, s store.BucketStore, createdAt time.Time) {
 				t.Helper()
@@ -179,13 +179,13 @@ func TestBucketStore_List(t *testing.T) {
 	}
 }
 
-func assertBucketRecord(t *testing.T, ctx context.Context, db *sql.DB, rec store.BucketRecord, expectedID string, expectedStamp time.Time) {
+func assertBucketRecord(t *testing.T, ctx context.Context, db *sql.DB, rec store.BucketRecord, wantID string, expectedStamp time.Time) {
 	t.Helper()
 
 	wantStamp := expectedStamp.UTC().Truncate(time.Microsecond)
 
-	if rec.ID != expectedID {
-		t.Fatalf("Create: id mismatch: got %q want %q", rec.ID, expectedID)
+	if rec.ID != wantID {
+		t.Fatalf("Create: id mismatch: got %q want %q", rec.ID, wantID)
 	}
 
 	if rec.Name == "" {
