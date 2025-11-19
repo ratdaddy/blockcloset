@@ -9,6 +9,11 @@ import (
 	"github.com/ratdaddy/blockcloset/flatbed/internal/testutil"
 )
 
+// TestMain_WiresAddressAndHandler verifies that main wires each public endpoint
+// through to the expected Gantry call. When adding a new endpoint, add a table
+// entry that issues the HTTP request, sets up any stub behavior, and points
+// callCount at the Gantry method the handler should invoke so we keep coverage
+// across the full main wiring.
 func TestMain_WiresAddressAndHandler(t *testing.T) {
 	t.Parallel()
 
@@ -23,15 +28,56 @@ func TestMain_WiresAddressAndHandler(t *testing.T) {
 	var gotAddr string
 	var served bool
 
+	type testCase struct {
+		name       string
+		method     string
+		target     string
+		wantStatus int
+		callName   string
+		callCount  func(*testutil.GantryStub) int
+	}
+
+	tests := []testCase{
+		{
+			name:       "E2E - PutBucket",
+			method:     http.MethodPut,
+			target:     "/e2e-bucket",
+			wantStatus: http.StatusCreated,
+			callName:   "gantry create",
+			callCount:  (*testutil.GantryStub).CreateCount,
+		},
+		{
+			name:       "E2E - ListBuckets",
+			method:     http.MethodGet,
+			target:     "/",
+			wantStatus: http.StatusOK,
+			callName:   "gantry list",
+			callCount:  (*testutil.GantryStub).ListCount,
+		},
+	}
+
 	listenAndServe = func(addr string, h http.Handler) error {
 		gotAddr = addr
 
-		req := httptest.NewRequest(http.MethodPut, "/smoke-bucket", nil)
-		rec := httptest.NewRecorder()
-		h.ServeHTTP(rec, req)
+		for _, tt := range tests {
+			req := httptest.NewRequest(tt.method, tt.target, nil)
+			rec := httptest.NewRecorder()
+			h.ServeHTTP(rec, req)
 
-		if rec.Code != http.StatusCreated {
-			t.Fatalf("smoke: status got %d, want %d", rec.Code, http.StatusCreated)
+			if rec.Code != tt.wantStatus {
+				t.Fatalf("%s: status got %d, want %d", tt.name, rec.Code, tt.wantStatus)
+			}
+			if tt.callCount != nil {
+				if got := tt.callCount(fg); got != 1 {
+					t.Fatalf("%s: %s count got %d, want 1", tt.name, tt.callName, got)
+				}
+			}
+
+			// reset for next iteration
+			fg.CreateCalls = nil
+			fg.ListCalls = 0
+			fg.CreateFn = nil
+			fg.ListFn = nil
 		}
 		served = true
 		return nil
