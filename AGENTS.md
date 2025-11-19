@@ -55,6 +55,7 @@
 - reference existing patterns in `flatbed/internal/httpapi` and `gantry/internal/grpcsvc` for helpers.
 - Do not ship new production behavior without a failing test in place unless the requester explicitly approves it first.
 - After writing a new test do not write the production behavior until told to do so by the requester.
+- Follow an interleaved TDD loop when collaborating with the requester: introduce one failing test (or expand an existing test with a new failing assertion), then immediately add the minimal code to make that specific failure pass before adding the next test. Keep each test/code pair as small as practical so the requester can review the intent at every increment.
 
 ## Commit & Pull Request Guidelines
 - Write short, imperative commit subjects (e.g., "Add centralized environment configuration") and reference issues in the body when relevant.

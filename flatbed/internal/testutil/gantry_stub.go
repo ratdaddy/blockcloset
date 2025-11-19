@@ -17,6 +17,14 @@ func NewGantryStub() *GantryStub {
 	return &GantryStub{}
 }
 
+func (g *GantryStub) CreateCount() int {
+	return len(g.CreateCalls)
+}
+
+func (g *GantryStub) ListCount() int {
+	return g.ListCalls
+}
+
 func (g *GantryStub) CreateBucket(ctx context.Context, name string) (string, error) {
 	g.CreateCalls = append(g.CreateCalls, name)
 	if g.CreateFn != nil {

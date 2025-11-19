@@ -1,15 +1,49 @@
 package httpapi_test
 
 import (
-	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"github.com/ratdaddy/blockcloset/flatbed/internal/gantry"
 	"github.com/ratdaddy/blockcloset/flatbed/internal/httpapi"
-	"github.com/ratdaddy/blockcloset/flatbed/internal/testutil"
 )
+
+// Table entries validate routing-only behavior. To cover a new endpoint,
+// add the stubbed handler implementation plus a case with the HTTP method
+// and target. Point callCount at the stub's counter so the test proves the
+// router triggers the correct handler without involving Gantry stubs.
+
+type stubBucketHandlers struct {
+	createStatus int
+	listStatus   int
+	createCalls  int
+	listCalls    int
+}
+
+func newStubBucketHandlers() *stubBucketHandlers {
+	return &stubBucketHandlers{
+		createStatus: http.StatusCreated,
+		listStatus:   http.StatusOK,
+	}
+}
+
+func (s *stubBucketHandlers) CreateBucket(w http.ResponseWriter, r *http.Request) {
+	s.createCalls++
+	w.WriteHeader(s.createStatus)
+}
+
+func (s *stubBucketHandlers) ListBuckets(w http.ResponseWriter, r *http.Request) {
+	s.listCalls++
+	w.WriteHeader(s.listStatus)
+}
+
+func (s *stubBucketHandlers) CreateCount() int {
+	return s.createCalls
+}
+
+func (s *stubBucketHandlers) ListCount() int {
+	return s.listCalls
+}
 
 func TestRouterChi_Routing(t *testing.T) {
 	t.Parallel()
@@ -19,32 +53,51 @@ func TestRouterChi_Routing(t *testing.T) {
 		method     string
 		target     string
 		wantStatus int
-		wantCalls  int
-		wantBucket string
+		callName   string
+		callCount  func(*stubBucketHandlers) int
 	}
 	cases := []tc{
-		{"PUT /{bucket} routes", http.MethodPut, "/alpha-bucket", http.StatusCreated, 1, "alpha-bucket"},
-		{"trailing slash still matches", http.MethodPut, "/bravo/", http.StatusCreated, 1, "bravo"},
-		{"GET list buckets", http.MethodGet, "/", http.StatusOK, 1, ""},
-		{"GET wrong path => 404", http.MethodGet, "/alpha-bucket", http.StatusNotFound, 0, ""},
-		{"subpath does not match", http.MethodPut, "/alpha-bucket/obj", http.StatusNotFound, 0, ""},
+		{
+			name:       "PUT /{bucket} routes",
+			method:     http.MethodPut,
+			target:     "/alpha-bucket",
+			wantStatus: http.StatusCreated,
+			callName:   "create handler",
+			callCount:  (*stubBucketHandlers).CreateCount,
+		},
+		{
+			name:       "trailing slash still matches",
+			method:     http.MethodPut,
+			target:     "/bravo/",
+			wantStatus: http.StatusCreated,
+			callName:   "create handler",
+			callCount:  (*stubBucketHandlers).CreateCount,
+		},
+		{
+			name:       "subpath does not match",
+			method:     http.MethodPut,
+			target:     "/alpha-bucket/obj",
+			wantStatus: http.StatusNotFound,
+		},
+		{
+			name:       "GET list buckets",
+			method:     http.MethodGet,
+			target:     "/",
+			wantStatus: http.StatusOK,
+			callName:   "list handler",
+			callCount:  (*stubBucketHandlers).ListCount,
+		},
+		{
+			name:       "GET wrong path => 404",
+			method:     http.MethodGet,
+			target:     "/alpha-bucket",
+			wantStatus: http.StatusNotFound,
+		},
 	}
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			g := testutil.NewGantryStub()
-			if c.wantBucket != "" {
-				g.CreateFn = func(_ context.Context, name string) (string, error) {
-					return name, nil
-				}
-			}
-			if c.method == http.MethodGet && c.target == "/" {
-				g.ListFn = func(context.Context) ([]gantry.Bucket, error) {
-					return nil, nil
-				}
-			}
-
-			h := httpapi.NewHandlers(g)
+			h := newStubBucketHandlers()
 			r := httpapi.NewRouter(h)
 
 			rec := httptest.NewRecorder()
@@ -55,17 +108,9 @@ func TestRouterChi_Routing(t *testing.T) {
 				t.Fatalf("status: got %d, want %d", rec.Code, c.wantStatus)
 			}
 
-			switch c.method {
-			case http.MethodPut:
-				if got := len(g.CreateCalls); got != c.wantCalls {
-					t.Fatalf("create calls: got %d want %d (calls=%v)", got, c.wantCalls, g.CreateCalls)
-				}
-				if c.wantBucket != "" && g.CreateCalls[0] != c.wantBucket {
-					t.Fatalf("bucket: got %q, want %q", g.CreateCalls[0], c.wantBucket)
-				}
-			case http.MethodGet:
-				if got := g.ListCalls; got != c.wantCalls {
-					t.Fatalf("list calls: got %d want %d", got, c.wantCalls)
+			if c.callCount != nil {
+				if got := c.callCount(h); got != 1 {
+					t.Fatalf("%s: %s count got %d, want 1", c.name, c.callName, got)
 				}
 			}
 		})
