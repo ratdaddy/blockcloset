@@ -9,8 +9,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/go-chi/chi/v5"
-
 	"github.com/ratdaddy/blockcloset/flatbed/internal/httpapi"
 	"github.com/ratdaddy/blockcloset/flatbed/internal/testutil"
 	"github.com/ratdaddy/blockcloset/pkg/storage/bucket"
@@ -22,9 +20,8 @@ import (
 func reqWithBucket(t *testing.T, method, name string) *http.Request {
 	t.Helper()
 	r := httptest.NewRequest(method, "/", nil)
-	rctx := chi.NewRouteContext()
-	rctx.URLParams.Add("bucket", name)
-	return r.WithContext(context.WithValue(r.Context(), chi.RouteCtxKey, rctx))
+	r.SetPathValue("bucket", name)
+	return r
 }
 
 type stubValidator struct {

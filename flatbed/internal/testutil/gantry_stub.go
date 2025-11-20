@@ -6,11 +6,17 @@ import (
 	"github.com/ratdaddy/blockcloset/flatbed/internal/gantry"
 )
 
+type ResolveWriteCall struct {
+	Bucket string
+	Key    string
+}
+
 type GantryStub struct {
-	CreateFn    func(context.Context, string) (string, error)
-	ListFn      func(context.Context) ([]gantry.Bucket, error)
-	CreateCalls []string
-	ListCalls   int
+	CreateFn         func(context.Context, string) (string, error)
+	ListFn           func(context.Context) ([]gantry.Bucket, error)
+	CreateCalls      []string
+	ListCalls        int
+	ResolveWriteCalls []ResolveWriteCall
 }
 
 func NewGantryStub() *GantryStub {
@@ -23,6 +29,10 @@ func (g *GantryStub) CreateCount() int {
 
 func (g *GantryStub) ListCount() int {
 	return g.ListCalls
+}
+
+func (g *GantryStub) ResolveWriteCount() int {
+	return len(g.ResolveWriteCalls)
 }
 
 func (g *GantryStub) CreateBucket(ctx context.Context, name string) (string, error) {
@@ -39,4 +49,12 @@ func (g *GantryStub) ListBuckets(ctx context.Context) ([]gantry.Bucket, error) {
 		return g.ListFn(ctx)
 	}
 	return nil, nil
+}
+
+func (g *GantryStub) ResolveWrite(ctx context.Context, bucket, key string) error {
+	g.ResolveWriteCalls = append(g.ResolveWriteCalls, ResolveWriteCall{
+		Bucket: bucket,
+		Key:    key,
+	})
+	return nil
 }

@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ratdaddy/blockcloset/flatbed/internal/respond"
+	"github.com/ratdaddy/blockcloset/flatbed/internal/httpapi/respond"
 )
 
 func (h *Handlers) ListBuckets(w http.ResponseWriter, r *http.Request) {
