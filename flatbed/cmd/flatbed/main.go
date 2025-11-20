@@ -10,14 +10,15 @@ import (
 	"github.com/ratdaddy/blockcloset/flatbed/internal/config"
 	"github.com/ratdaddy/blockcloset/flatbed/internal/gantry"
 	"github.com/ratdaddy/blockcloset/flatbed/internal/httpapi"
+	"github.com/ratdaddy/blockcloset/flatbed/internal/httpapi/handlers"
 	"github.com/ratdaddy/blockcloset/flatbed/internal/logger"
 )
 
 var (
-	buildHandler = func(g httpapi.GantryClient) http.Handler {
-		return httpapi.NewRouter(httpapi.NewHandlers(g))
+	buildHandler = func(g handlers.GantryClient) http.Handler {
+		return httpapi.NewRouter(handlers.NewHandlers(g))
 	}
-	gantryClient = func(addr string) (httpapi.GantryClient, error) {
+	gantryClient = func(addr string) (handlers.GantryClient, error) {
 		return gantry.New(context.Background(), addr)
 	}
 	listenAndServe = http.ListenAndServe

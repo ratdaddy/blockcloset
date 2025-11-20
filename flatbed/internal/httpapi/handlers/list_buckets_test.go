@@ -1,4 +1,4 @@
-package httpapi_test
+package handlers_test
 
 import (
 	"context"
@@ -14,7 +14,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/ratdaddy/blockcloset/flatbed/internal/gantry"
-	"github.com/ratdaddy/blockcloset/flatbed/internal/httpapi"
+	"github.com/ratdaddy/blockcloset/flatbed/internal/httpapi/handlers"
 	"github.com/ratdaddy/blockcloset/flatbed/internal/testutil"
 )
 
@@ -62,7 +62,7 @@ func TestHandlers_ListBuckets(t *testing.T) {
 				return c.listResp, c.listErr
 			}
 
-			h := &httpapi.Handlers{Gantry: stub}
+			h := &handlers.Handlers{Gantry: stub}
 
 			req := httptest.NewRequest(http.MethodGet, "/", nil)
 			rec := httptest.NewRecorder()

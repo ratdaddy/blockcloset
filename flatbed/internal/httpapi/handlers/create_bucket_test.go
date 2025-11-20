@@ -1,4 +1,4 @@
-package httpapi_test
+package handlers_test
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ratdaddy/blockcloset/flatbed/internal/httpapi"
+	"github.com/ratdaddy/blockcloset/flatbed/internal/httpapi/handlers"
 	"github.com/ratdaddy/blockcloset/flatbed/internal/testutil"
 	"github.com/ratdaddy/blockcloset/pkg/storage/bucket"
 	servicev1 "github.com/ratdaddy/blockcloset/proto/gen/gantry/service/v1"
@@ -154,7 +154,7 @@ func TestCreateBucket_ValidationGantryAndResponse(t *testing.T) {
 					return "", c.gantryErr
 				}
 			}
-			h := &httpapi.Handlers{Validator: v, Gantry: g}
+			h := &handlers.Handlers{Validator: v, Gantry: g}
 
 			req := reqWithBucket(t, http.MethodPut, c.bucket)
 			rec := httptest.NewRecorder()
