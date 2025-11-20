@@ -4,17 +4,16 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/go-chi/chi/v5"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/ratdaddy/blockcloset/flatbed/internal/httpapi/respond"
 	"github.com/ratdaddy/blockcloset/flatbed/internal/logger"
-	"github.com/ratdaddy/blockcloset/flatbed/internal/respond"
 	servicev1 "github.com/ratdaddy/blockcloset/proto/gen/gantry/service/v1"
 )
 
 func (h *Handlers) CreateBucket(w http.ResponseWriter, r *http.Request) {
-	bucket := chi.URLParam(r, "bucket")
+	bucket := r.PathValue("bucket")
 
 	if err := h.Validator.ValidateBucketName(bucket); err != nil {
 		respond.Error(w, r, err.Error(), http.StatusBadRequest)

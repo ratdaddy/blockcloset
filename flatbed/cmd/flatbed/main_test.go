@@ -54,6 +54,14 @@ func TestMain_WiresAddressAndHandler(t *testing.T) {
 			callName:   "gantry list",
 			callCount:  (*testutil.GantryStub).ListCount,
 		},
+		{
+			name:       "E2E - PutObject",
+			method:     http.MethodPut,
+			target:     "/demo-bucket/demo-key",
+			wantStatus: http.StatusOK,
+			callName:   "gantry resolve write",
+			callCount:  (*testutil.GantryStub).ResolveWriteCount,
+		},
 	}
 
 	listenAndServe = func(addr string, h http.Handler) error {
@@ -76,6 +84,7 @@ func TestMain_WiresAddressAndHandler(t *testing.T) {
 			// reset for next iteration
 			fg.CreateCalls = nil
 			fg.ListCalls = 0
+			fg.ResolveWriteCalls = nil
 			fg.CreateFn = nil
 			fg.ListFn = nil
 		}

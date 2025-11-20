@@ -87,7 +87,7 @@ In the flatbed and gantry directories run the app with `make run`.
 
 Curl examples to run through flatbed:
 ```bash
-# successful bucket creation:
+# create bucket:
 curl -i -X PUT --data '' http://$FLATBED_ADDR/hello
 
 # attempt to create a bucket with an invalid name:
@@ -98,6 +98,12 @@ curl -i -X PUT --data '' http://$FLATBED_ADDR/bad
 
 # panic gantry:
 curl -i -X PUT --data '' http://$FLATBED_ADDR/panic
+
+# list buckets:
+curl -i http://$FLATBED_ADDR/
+
+# put object:
+curl -i -X PUT --data '' http://$FLATBED_ADDR/hello/object
 ```
 
 Grpcurl example to run directly with gantry:

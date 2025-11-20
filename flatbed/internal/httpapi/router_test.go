@@ -14,16 +14,20 @@ import (
 // router triggers the correct handler without involving Gantry stubs.
 
 type stubBucketHandlers struct {
-	createStatus int
-	listStatus   int
-	createCalls  int
-	listCalls    int
+	createStatus    int
+	listStatus      int
+	putObjectStatus int
+	createCalls     int
+	listCalls       int
+	putObjectCalls  int
+	lastPutKey      string
 }
 
 func newStubBucketHandlers() *stubBucketHandlers {
 	return &stubBucketHandlers{
-		createStatus: http.StatusCreated,
-		listStatus:   http.StatusOK,
+		createStatus:    http.StatusCreated,
+		listStatus:      http.StatusOK,
+		putObjectStatus: http.StatusOK,
 	}
 }
 
@@ -37,12 +41,22 @@ func (s *stubBucketHandlers) ListBuckets(w http.ResponseWriter, r *http.Request)
 	w.WriteHeader(s.listStatus)
 }
 
+func (s *stubBucketHandlers) PutObject(w http.ResponseWriter, r *http.Request) {
+	s.putObjectCalls++
+	s.lastPutKey = r.PathValue("key")
+	w.WriteHeader(s.putObjectStatus)
+}
+
 func (s *stubBucketHandlers) CreateCount() int {
 	return s.createCalls
 }
 
 func (s *stubBucketHandlers) ListCount() int {
 	return s.listCalls
+}
+
+func (s *stubBucketHandlers) PutObjectCount() int {
+	return s.putObjectCalls
 }
 
 func TestRouterChi_Routing(t *testing.T) {
@@ -55,6 +69,7 @@ func TestRouterChi_Routing(t *testing.T) {
 		wantStatus int
 		callName   string
 		callCount  func(*stubBucketHandlers) int
+		wantKey    string
 	}
 	cases := []tc{
 		{
@@ -74,10 +89,22 @@ func TestRouterChi_Routing(t *testing.T) {
 			callCount:  (*stubBucketHandlers).CreateCount,
 		},
 		{
-			name:       "subpath does not match",
+			name:       "PUT /{bucket}/{key} routes to PutObject",
 			method:     http.MethodPut,
-			target:     "/alpha-bucket/obj",
-			wantStatus: http.StatusNotFound,
+			target:     "/bucket/key",
+			wantStatus: http.StatusOK,
+			callName:   "put object handler",
+			callCount:  (*stubBucketHandlers).PutObjectCount,
+			wantKey:    "key",
+		},
+		{
+			name:       "PUT /{bucket}/{key} with nested path",
+			method:     http.MethodPut,
+			target:     "/bucket/path/to/key",
+			wantStatus: http.StatusOK,
+			callName:   "put object handler",
+			callCount:  (*stubBucketHandlers).PutObjectCount,
+			wantKey:    "path/to/key",
 		},
 		{
 			name:       "GET list buckets",
@@ -111,6 +138,12 @@ func TestRouterChi_Routing(t *testing.T) {
 			if c.callCount != nil {
 				if got := c.callCount(h); got != 1 {
 					t.Fatalf("%s: %s count got %d, want 1", c.name, c.callName, got)
+				}
+			}
+
+			if c.wantKey != "" {
+				if h.lastPutKey != c.wantKey {
+					t.Fatalf("%s: key got %q, want %q", c.name, h.lastPutKey, c.wantKey)
 				}
 			}
 		})
