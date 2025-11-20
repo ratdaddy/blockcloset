@@ -5,7 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/ratdaddy/blockcloset/flatbed/internal/httpapi"
+	"github.com/ratdaddy/blockcloset/flatbed/internal/httpapi/handlers"
 	"github.com/ratdaddy/blockcloset/flatbed/internal/testutil"
 )
 
@@ -21,7 +21,7 @@ func TestMain_WiresAddressAndHandler(t *testing.T) {
 	defer func() { buildHandler, listenAndServe, gantryClient = origBuild, origListen, origGantry }()
 
 	fg := testutil.NewGantryStub()
-	gantryClient = func(addr string) (httpapi.GantryClient, error) {
+	gantryClient = func(addr string) (handlers.GantryClient, error) {
 		return fg, nil
 	}
 
