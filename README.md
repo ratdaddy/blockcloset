@@ -103,7 +103,19 @@ curl -i -X PUT --data '' http://$FLATBED_ADDR/panic
 curl -i http://$FLATBED_ADDR/
 
 # put object:
+curl -i -X PUT --data 'hello' http://$FLATBED_ADDR/hello/object
+
+# put object with no content length error:
+curl -i -X PUT --data '' http://$FLATBED_ADDR/hello/object -H "Content-Length:" --http1.0
+
+# put object with 0-length content:
 curl -i -X PUT --data '' http://$FLATBED_ADDR/hello/object
+
+# put object with content length too large error:
+curl -i -X PUT --data '' http://$FLATBED_ADDR/hello/object -H "Content-Length: 5368709121"
+
+# put object with invalid transfer encoding:
+  curl -i -X PUT -H "Content-Length: 1024" -H "Transfer-Encoding: chunked" http://$FLATBED_ADDR/hello/object
 ```
 
 Grpcurl example to run directly with gantry:
@@ -123,5 +135,4 @@ grpcurl -plaintext -d '{"name":"panic"}' $GANTRY_ADDR gantry.service.v1.GantrySe
 
 # list buckets:
 grpcurl -plaintext -d '{}' $GANTRY_ADDR gantry.service.v1.GantryService/ListBuckets
-```
 ---
