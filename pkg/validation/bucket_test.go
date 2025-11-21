@@ -1,10 +1,10 @@
-package bucket_test
+package validation_test
 
 import (
 	"strings"
 	"testing"
 
-	"github.com/ratdaddy/blockcloset/pkg/storage/bucket"
+	"github.com/ratdaddy/blockcloset/pkg/validation"
 )
 
 // Bucket name validation tests based on S3 naming rules:
@@ -12,7 +12,7 @@ import (
 
 func TestDefaultBucketNameValidator_GeneralPurposeRules(t *testing.T) {
 	t.Parallel()
-	v := bucket.DefaultBucketNameValidator{}
+	v := validation.DefaultBucketNameValidator{}
 
 	type tc struct {
 		name   string
@@ -74,10 +74,10 @@ func TestDefaultBucketNameValidator_GeneralPurposeRules(t *testing.T) {
 			}
 			if !c.wantOK {
 				if err == nil {
-					t.Fatalf("want error %v, got nil", bucket.ErrInvalidBucketName)
+					t.Fatalf("want error %v, got nil", validation.ErrInvalidBucketName)
 				}
-				if err != bucket.ErrInvalidBucketName {
-					t.Fatalf("want %v, got %v", bucket.ErrInvalidBucketName, err)
+				if err != validation.ErrInvalidBucketName {
+					t.Fatalf("want %v, got %v", validation.ErrInvalidBucketName, err)
 				}
 			}
 		})

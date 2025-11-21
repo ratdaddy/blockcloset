@@ -4,7 +4,7 @@ Reusable Go packages shared across Block Closet services.
 
 ## Structure
 
-- `storage/bucket`: S3-compatible bucket name validation exposed via `DefaultBucketNameValidator`.
+- `validation`: S3-compatible validators for bucket names and object keys, exposed via `DefaultBucketNameValidator` and `DefaultKeyValidator`.
 
 ## Development
 

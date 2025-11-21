@@ -1,4 +1,4 @@
-package bucket
+package validation
 
 import (
 	"errors"
