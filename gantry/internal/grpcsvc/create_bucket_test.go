@@ -13,7 +13,7 @@ import (
 	"github.com/oklog/ulid/v2"
 	"github.com/ratdaddy/blockcloset/gantry/internal/store"
 	"github.com/ratdaddy/blockcloset/gantry/internal/testutil"
-	"github.com/ratdaddy/blockcloset/pkg/storage/bucket"
+	"github.com/ratdaddy/blockcloset/pkg/validation"
 	servicev1 "github.com/ratdaddy/blockcloset/proto/gen/gantry/service/v1"
 )
 
@@ -45,7 +45,7 @@ func TestService_CreateBucket(t *testing.T) {
 			bucket:       "Bad!Name",
 			wantErr:      true,
 			code:         codes.InvalidArgument,
-			message:      bucket.ErrInvalidBucketName.Error(),
+			message:      validation.ErrInvalidBucketName.Error(),
 			wantResponse: false,
 		},
 		{

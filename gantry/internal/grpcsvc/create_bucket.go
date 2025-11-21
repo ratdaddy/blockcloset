@@ -12,7 +12,7 @@ import (
 
 	"github.com/ratdaddy/blockcloset/gantry/internal/store"
 	"github.com/ratdaddy/blockcloset/loggrpc"
-	"github.com/ratdaddy/blockcloset/pkg/storage/bucket"
+	"github.com/ratdaddy/blockcloset/pkg/validation"
 	bucketv1 "github.com/ratdaddy/blockcloset/proto/gen/gantry/bucket/v1"
 	servicev1 "github.com/ratdaddy/blockcloset/proto/gen/gantry/service/v1"
 )
@@ -20,7 +20,7 @@ import (
 func (s *Service) CreateBucket(ctx context.Context, req *servicev1.CreateBucketRequest) (*servicev1.CreateBucketResponse, error) {
 	name := req.GetName()
 
-	validator := bucket.DefaultBucketNameValidator{}
+	validator := validation.DefaultBucketNameValidator{}
 
 	if err := validator.ValidateBucketName(name); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())

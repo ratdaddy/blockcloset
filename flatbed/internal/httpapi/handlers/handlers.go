@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/ratdaddy/blockcloset/flatbed/internal/gantry"
-	"github.com/ratdaddy/blockcloset/pkg/storage/bucket"
+	"github.com/ratdaddy/blockcloset/pkg/validation"
 )
 
 // GantryClient defines the operations needed from the Gantry service.
@@ -17,13 +17,13 @@ type GantryClient interface {
 // Handlers provides HTTP handler implementations for S3-compatible operations.
 // URL parameters are extracted using r.PathValue
 type Handlers struct {
-	Validator bucket.BucketNameValidator
+	Validator validation.BucketNameValidator
 	Gantry    GantryClient
 }
 
 func NewHandlers(g GantryClient) *Handlers {
 	return &Handlers{
-		Validator: bucket.DefaultBucketNameValidator{},
+		Validator: validation.DefaultBucketNameValidator{},
 		Gantry:    g,
 	}
 }
