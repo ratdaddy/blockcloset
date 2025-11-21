@@ -32,6 +32,7 @@ func TestMain_WiresAddressAndHandler(t *testing.T) {
 		name       string
 		method     string
 		target     string
+		headers    map[string]string
 		wantStatus int
 		callName   string
 		callCount  func(*testutil.GantryStub) int
@@ -58,6 +59,7 @@ func TestMain_WiresAddressAndHandler(t *testing.T) {
 			name:       "E2E - PutObject",
 			method:     http.MethodPut,
 			target:     "/demo-bucket/demo-key",
+			headers:    map[string]string{"Content-Length": "1024"},
 			wantStatus: http.StatusOK,
 			callName:   "gantry resolve write",
 			callCount:  (*testutil.GantryStub).ResolveWriteCount,
@@ -69,6 +71,9 @@ func TestMain_WiresAddressAndHandler(t *testing.T) {
 
 		for _, tt := range tests {
 			req := httptest.NewRequest(tt.method, tt.target, nil)
+			for k, v := range tt.headers {
+				req.Header.Set(k, v)
+			}
 			rec := httptest.NewRecorder()
 			h.ServeHTTP(rec, req)
 
