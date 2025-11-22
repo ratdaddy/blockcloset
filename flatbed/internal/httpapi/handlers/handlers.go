@@ -11,7 +11,7 @@ import (
 type GantryClient interface {
 	CreateBucket(ctx context.Context, name string) (string, error)
 	ListBuckets(ctx context.Context) ([]gantry.Bucket, error)
-	ResolveWrite(ctx context.Context, bucket, key string) error
+	ResolveWrite(ctx context.Context, bucket, key string, size int64) (objectID, cradleAddress string, err error)
 }
 
 // Handlers provides HTTP handler implementations for S3-compatible operations.

@@ -25,6 +25,7 @@ func TestPutObject_ValidationGantryAndResponse(t *testing.T) {
 		wantResolves      int
 		wantBucket        string
 		wantKey           string
+		wantSize          int64
 		wantBodySubstr    string
 	}
 
@@ -38,6 +39,7 @@ func TestPutObject_ValidationGantryAndResponse(t *testing.T) {
 			wantResolves:  1,
 			wantBucket:    "my-bucket",
 			wantKey:       "my-key",
+			wantSize:      1024,
 		},
 		{
 			name:           "missing Content-Length -> 411",
@@ -137,6 +139,9 @@ func TestPutObject_ValidationGantryAndResponse(t *testing.T) {
 				}
 				if call.Key != c.wantKey {
 					t.Fatalf("ResolveWrite key: got %q, want %q", call.Key, c.wantKey)
+				}
+				if call.Size != c.wantSize {
+					t.Fatalf("ResolveWrite size: got %d, want %d", call.Size, c.wantSize)
 				}
 			}
 
