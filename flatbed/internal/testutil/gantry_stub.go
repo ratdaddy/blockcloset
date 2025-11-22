@@ -9,13 +9,15 @@ import (
 type ResolveWriteCall struct {
 	Bucket string
 	Key    string
+	Size   int64
 }
 
 type GantryStub struct {
-	CreateFn         func(context.Context, string) (string, error)
-	ListFn           func(context.Context) ([]gantry.Bucket, error)
-	CreateCalls      []string
-	ListCalls        int
+	CreateFn          func(context.Context, string) (string, error)
+	ListFn            func(context.Context) ([]gantry.Bucket, error)
+	ResolveWriteFn    func(context.Context, string, string, int64) (string, string, error)
+	CreateCalls       []string
+	ListCalls         int
 	ResolveWriteCalls []ResolveWriteCall
 }
 
@@ -51,10 +53,14 @@ func (g *GantryStub) ListBuckets(ctx context.Context) ([]gantry.Bucket, error) {
 	return nil, nil
 }
 
-func (g *GantryStub) ResolveWrite(ctx context.Context, bucket, key string) error {
+func (g *GantryStub) ResolveWrite(ctx context.Context, bucket, key string, size int64) (string, string, error) {
 	g.ResolveWriteCalls = append(g.ResolveWriteCalls, ResolveWriteCall{
 		Bucket: bucket,
 		Key:    key,
+		Size:   size,
 	})
-	return nil
+	if g.ResolveWriteFn != nil {
+		return g.ResolveWriteFn(ctx, bucket, key, size)
+	}
+	return "stub-object-id", "localhost:9002", nil
 }

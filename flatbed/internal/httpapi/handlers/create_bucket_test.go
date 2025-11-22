@@ -9,12 +9,13 @@ import (
 	"strings"
 	"testing"
 
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"github.com/ratdaddy/blockcloset/flatbed/internal/httpapi/handlers"
 	"github.com/ratdaddy/blockcloset/flatbed/internal/testutil"
 	"github.com/ratdaddy/blockcloset/pkg/validation"
 	servicev1 "github.com/ratdaddy/blockcloset/proto/gen/gantry/service/v1"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 func reqWithBucket(t *testing.T, method, name string) *http.Request {

@@ -21,6 +21,7 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	GantryService_CreateBucket_FullMethodName = "/gantry.service.v1.GantryService/CreateBucket"
 	GantryService_ListBuckets_FullMethodName  = "/gantry.service.v1.GantryService/ListBuckets"
+	GantryService_ResolveWrite_FullMethodName = "/gantry.service.v1.GantryService/ResolveWrite"
 )
 
 // GantryServiceClient is the client API for GantryService service.
@@ -29,6 +30,7 @@ const (
 type GantryServiceClient interface {
 	CreateBucket(ctx context.Context, in *CreateBucketRequest, opts ...grpc.CallOption) (*CreateBucketResponse, error)
 	ListBuckets(ctx context.Context, in *ListBucketsRequest, opts ...grpc.CallOption) (*ListBucketsResponse, error)
+	ResolveWrite(ctx context.Context, in *ResolveWriteRequest, opts ...grpc.CallOption) (*ResolveWriteResponse, error)
 }
 
 type gantryServiceClient struct {
@@ -59,12 +61,23 @@ func (c *gantryServiceClient) ListBuckets(ctx context.Context, in *ListBucketsRe
 	return out, nil
 }
 
+func (c *gantryServiceClient) ResolveWrite(ctx context.Context, in *ResolveWriteRequest, opts ...grpc.CallOption) (*ResolveWriteResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ResolveWriteResponse)
+	err := c.cc.Invoke(ctx, GantryService_ResolveWrite_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // GantryServiceServer is the server API for GantryService service.
 // All implementations must embed UnimplementedGantryServiceServer
 // for forward compatibility.
 type GantryServiceServer interface {
 	CreateBucket(context.Context, *CreateBucketRequest) (*CreateBucketResponse, error)
 	ListBuckets(context.Context, *ListBucketsRequest) (*ListBucketsResponse, error)
+	ResolveWrite(context.Context, *ResolveWriteRequest) (*ResolveWriteResponse, error)
 	mustEmbedUnimplementedGantryServiceServer()
 }
 
@@ -80,6 +93,9 @@ func (UnimplementedGantryServiceServer) CreateBucket(context.Context, *CreateBuc
 }
 func (UnimplementedGantryServiceServer) ListBuckets(context.Context, *ListBucketsRequest) (*ListBucketsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListBuckets not implemented")
+}
+func (UnimplementedGantryServiceServer) ResolveWrite(context.Context, *ResolveWriteRequest) (*ResolveWriteResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ResolveWrite not implemented")
 }
 func (UnimplementedGantryServiceServer) mustEmbedUnimplementedGantryServiceServer() {}
 func (UnimplementedGantryServiceServer) testEmbeddedByValue()                       {}
@@ -138,6 +154,24 @@ func _GantryService_ListBuckets_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _GantryService_ResolveWrite_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResolveWriteRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GantryServiceServer).ResolveWrite(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GantryService_ResolveWrite_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GantryServiceServer).ResolveWrite(ctx, req.(*ResolveWriteRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // GantryService_ServiceDesc is the grpc.ServiceDesc for GantryService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -152,6 +186,10 @@ var GantryService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListBuckets",
 			Handler:    _GantryService_ListBuckets_Handler,
+		},
+		{
+			MethodName: "ResolveWrite",
+			Handler:    _GantryService_ResolveWrite_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

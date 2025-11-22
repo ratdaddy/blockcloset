@@ -52,7 +52,7 @@ func (h *Handlers) PutObject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_ = h.Gantry.ResolveWrite(r.Context(), bucket, key)
+	_, _, _ = h.Gantry.ResolveWrite(r.Context(), bucket, key, contentLength)
 
 	w.WriteHeader(http.StatusOK)
 }

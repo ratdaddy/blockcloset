@@ -141,4 +141,7 @@ grpcurl -plaintext -d '{"name":"panic"}' $GANTRY_ADDR gantry.service.v1.GantrySe
 
 # list buckets:
 grpcurl -plaintext -d '{}' $GANTRY_ADDR gantry.service.v1.GantryService/ListBuckets
+
+# resolve write:
+grpcurl -plaintext -d '{"bucket":"my-bucket","key":"my-key.txt","size":1024}' $GANTRY_ADDR gantry.service.v1.GantryService/ResolveWrite
 ---
