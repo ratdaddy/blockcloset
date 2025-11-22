@@ -15,7 +15,7 @@ import (
 func (h *Handlers) CreateBucket(w http.ResponseWriter, r *http.Request) {
 	bucket := r.PathValue("bucket")
 
-	if err := h.Validator.ValidateBucketName(bucket); err != nil {
+	if err := h.BucketValidator.ValidateBucketName(bucket); err != nil {
 		respond.Error(w, r, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -31,10 +31,12 @@ func (h *Handlers) CreateBucket(w http.ResponseWriter, r *http.Request) {
 		case codes.InvalidArgument:
 			respond.Error(w, r, st.Message(), http.StatusBadRequest)
 		case codes.Internal:
+			logger.LogGantryError(r, err)
 			respond.Error(w, r, "InternalError", http.StatusInternalServerError)
 		case codes.AlreadyExists:
 			respond.Error(w, r, bucketConflictMessage(st), http.StatusConflict)
 		default:
+			logger.LogGantryError(r, err)
 			respond.Error(w, r, "InternalError", http.StatusInternalServerError)
 		}
 		return

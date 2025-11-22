@@ -9,6 +9,7 @@ import (
 
 	"github.com/ratdaddy/blockcloset/flatbed/internal/httpapi/handlers"
 	"github.com/ratdaddy/blockcloset/flatbed/internal/testutil"
+	"github.com/ratdaddy/blockcloset/pkg/validation"
 )
 
 func TestPutObject_ValidationGantryAndResponse(t *testing.T) {
@@ -75,12 +76,34 @@ func TestPutObject_ValidationGantryAndResponse(t *testing.T) {
 			wantResolves:     0,
 			wantBodySubstr:   "InvalidRequest",
 		},
+		{
+			name:           "invalid bucket name -> 400",
+			bucket:         "INVALID-BUCKET",
+			key:            "my-key",
+			contentLength:  "1024",
+			wantStatus:     http.StatusBadRequest,
+			wantResolves:   0,
+			wantBodySubstr: "InvalidBucketName",
+		},
+		{
+			name:           "invalid key (null byte) -> 400",
+			bucket:         "my-bucket",
+			key:            "file\x00name",
+			contentLength:  "1024",
+			wantStatus:     http.StatusBadRequest,
+			wantResolves:   0,
+			wantBodySubstr: "InvalidKeyName",
+		},
 	}
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			stub := testutil.NewGantryStub()
-			h := &handlers.Handlers{Gantry: stub}
+			h := &handlers.Handlers{
+				BucketValidator: validation.DefaultBucketNameValidator{},
+				KeyValidator:    validation.DefaultKeyValidator{},
+				Gantry:          stub,
+			}
 
 			req := httptest.NewRequest(http.MethodPut, "/", nil)
 			req.SetPathValue("bucket", c.bucket)
