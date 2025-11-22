@@ -90,10 +90,10 @@ Curl examples to run through flatbed:
 # create bucket:
 curl -i -X PUT --data '' http://$FLATBED_ADDR/hello
 
-# attempt to create a bucket with an invalid name:
+# create bucket with an invalid name:
 curl -i -X PUT --data '' http://$FLATBED_ADDR/invalid_name!
 
-# attempt to create a bucket with an invalid filename (as seen by gantry):
+# create bucket with an invalid filename (as seen by gantry):
 curl -i -X PUT --data '' http://$FLATBED_ADDR/bad
 
 # panic gantry:
@@ -116,6 +116,12 @@ curl -i -X PUT --data '' http://$FLATBED_ADDR/hello/object -H "Content-Length: 5
 
 # put object with invalid transfer encoding:
   curl -i -X PUT -H "Content-Length: 1024" -H "Transfer-Encoding: chunked" http://$FLATBED_ADDR/hello/object
+
+# put object with an invalid bucket name:
+curl -i -X PUT --data 'hello' http://$FLATBED_ADDR/Invalid-name/object
+
+# put object with an invalid key name:
+curl -i -X PUT -d 'hello' http://$FLATBED_ADDR/my-bucket/$(head -c 1025 /dev/zero | tr '\0' 'a')
 ```
 
 Grpcurl example to run directly with gantry:

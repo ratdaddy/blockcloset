@@ -6,11 +6,13 @@ import (
 	"time"
 
 	"github.com/ratdaddy/blockcloset/flatbed/internal/httpapi/respond"
+	"github.com/ratdaddy/blockcloset/flatbed/internal/logger"
 )
 
 func (h *Handlers) ListBuckets(w http.ResponseWriter, r *http.Request) {
 	buckets, err := h.Gantry.ListBuckets(r.Context())
 	if err != nil {
+		logger.LogGantryError(r, err)
 		respond.Error(w, r, "InternalError", http.StatusInternalServerError)
 		return
 	}

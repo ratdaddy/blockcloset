@@ -40,6 +40,18 @@ func (h *Handlers) PutObject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Validate bucket name
+	if err := h.BucketValidator.ValidateBucketName(bucket); err != nil {
+		respond.Error(w, r, "InvalidBucketName", http.StatusBadRequest)
+		return
+	}
+
+	// Validate key
+	if err := h.KeyValidator.ValidateKey(key); err != nil {
+		respond.Error(w, r, "InvalidKeyName", http.StatusBadRequest)
+		return
+	}
+
 	_ = h.Gantry.ResolveWrite(r.Context(), bucket, key)
 
 	w.WriteHeader(http.StatusOK)

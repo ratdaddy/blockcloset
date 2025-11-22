@@ -15,3 +15,10 @@ func LogResult(r *http.Request, result string) {
 func LogError(w http.ResponseWriter, r *http.Request, err string) {
 	httplog.SetAttrs(r.Context(), slog.String("error.message", err))
 }
+
+func LogGantryError(r *http.Request, err error) {
+	httplog.SetAttrs(r.Context(),
+		slog.String("error.type", "gantry"),
+		slog.String("error.detail", err.Error()),
+	)
+}

@@ -17,13 +17,15 @@ type GantryClient interface {
 // Handlers provides HTTP handler implementations for S3-compatible operations.
 // URL parameters are extracted using r.PathValue
 type Handlers struct {
-	Validator validation.BucketNameValidator
-	Gantry    GantryClient
+	BucketValidator validation.BucketNameValidator
+	KeyValidator    validation.KeyValidator
+	Gantry          GantryClient
 }
 
 func NewHandlers(g GantryClient) *Handlers {
 	return &Handlers{
-		Validator: validation.DefaultBucketNameValidator{},
-		Gantry:    g,
+		BucketValidator: validation.DefaultBucketNameValidator{},
+		KeyValidator:    validation.DefaultKeyValidator{},
+		Gantry:          g,
 	}
 }
