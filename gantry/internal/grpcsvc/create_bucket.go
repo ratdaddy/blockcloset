@@ -23,15 +23,29 @@ func (s *Service) CreateBucket(ctx context.Context, req *servicev1.CreateBucketR
 	validator := validation.DefaultBucketNameValidator{}
 
 	if err := validator.ValidateBucketName(name); err != nil {
-		return nil, status.Error(codes.InvalidArgument, err.Error())
+		return nil, status.Error(codes.InvalidArgument, "InvalidBucketName")
 	}
 
 	if name == "bad" {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid bucket name")
+		return nil, status.Errorf(codes.InvalidArgument, "InvalidBucketName")
 	}
 
 	if name == "panic" {
 		panic(status.New(codes.Internal, "intentional test panic"))
+	}
+
+	// Special bucket name for testing "bucket owned by someone else"
+	if name == "forbidden" {
+		conflict := &servicev1.BucketOwnershipConflict{
+			Reason: servicev1.BucketOwnershipConflict_REASON_BUCKET_ALREADY_EXISTS,
+			Bucket: name,
+		}
+		st := status.New(codes.AlreadyExists, "bucket already exists")
+		withDetail, err := st.WithDetails(conflict)
+		if err != nil {
+			return nil, loggrpc.SetError(ctx, status.Error(codes.Internal, err.Error()))
+		}
+		return nil, loggrpc.SetError(ctx, withDetail.Err())
 	}
 
 	bucketID := store.NewID()

@@ -88,16 +88,19 @@ In the flatbed and gantry directories run the app with `make run`.
 Curl examples to run through flatbed:
 ```bash
 # create bucket:
-curl -i -X PUT --data '' http://$FLATBED_ADDR/hello
+curl -i -X PUT http://$FLATBED_ADDR/hello
 
 # create bucket with an invalid name:
-curl -i -X PUT --data '' http://$FLATBED_ADDR/invalid_name!
+curl -i -X PUT http://$FLATBED_ADDR/invalid_name!
 
-# create bucket with an invalid filename (as seen by gantry):
-curl -i -X PUT --data '' http://$FLATBED_ADDR/bad
+# create bucket with an invalid bucket name (as seen by gantry):
+curl -i -X PUT http://$FLATBED_ADDR/bad
+
+# create bucket with a bucket name we don't own:
+curl -i -X PUT http://$FLATBED_ADDR/forbidden
 
 # panic gantry:
-curl -i -X PUT --data '' http://$FLATBED_ADDR/panic
+curl -i -X PUT http://$FLATBED_ADDR/panic
 
 # list buckets:
 curl -i http://$FLATBED_ADDR/
@@ -119,6 +122,9 @@ curl -i -X PUT --data '' http://$FLATBED_ADDR/hello/object -H "Content-Length: 5
 
 # put object with an invalid bucket name:
 curl -i -X PUT --data 'hello' http://$FLATBED_ADDR/Invalid-name/object
+
+# put object with a bucket name we don't own:
+curl -i -X PUT --data 'hello' http://$FLATBED_ADDR/forbidden/object`
 
 # put object with an invalid key name:
 curl -i -X PUT -d 'hello' http://$FLATBED_ADDR/my-bucket/$(head -c 1025 /dev/zero | tr '\0' 'a')

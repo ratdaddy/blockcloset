@@ -16,7 +16,7 @@ func (h *Handlers) CreateBucket(w http.ResponseWriter, r *http.Request) {
 	bucket := r.PathValue("bucket")
 
 	if err := h.BucketValidator.ValidateBucketName(bucket); err != nil {
-		respond.Error(w, r, err.Error(), http.StatusBadRequest)
+		respond.Error(w, r, "InvalidBucketName", http.StatusBadRequest)
 		return
 	}
 

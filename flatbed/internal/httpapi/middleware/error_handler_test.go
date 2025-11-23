@@ -16,16 +16,30 @@ func TestErrorHandler(t *testing.T) {
 		wantBodyPrefix string
 	}{
 		{
-			name:           "404 gets custom error",
+			name:           "404 without body gets custom error",
 			handlerStatus:  http.StatusNotFound,
-			handlerBody:    "original not found",
+			handlerBody:    "",
 			wantStatus:     http.StatusNotFound,
 			wantBodyPrefix: "page not found",
 		},
 		{
-			name:           "405 gets custom error as 404",
+			name:           "405 without body gets custom error as 404",
 			handlerStatus:  http.StatusMethodNotAllowed,
-			handlerBody:    "original method not allowed",
+			handlerBody:    "",
+			wantStatus:     http.StatusNotFound,
+			wantBodyPrefix: "page not found",
+		},
+		{
+			name:           "404 with body passes through unchanged",
+			handlerStatus:  http.StatusNotFound,
+			handlerBody:    "NoSuchBucket",
+			wantStatus:     http.StatusNotFound,
+			wantBodyPrefix: "NoSuchBucket",
+		},
+		{
+			name:           "405 with body still gets converted to 404",
+			handlerStatus:  http.StatusMethodNotAllowed,
+			handlerBody:    "MethodNotAllowed",
 			wantStatus:     http.StatusNotFound,
 			wantBodyPrefix: "page not found",
 		},
