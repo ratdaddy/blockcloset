@@ -26,6 +26,10 @@ type BucketStoreFake struct {
 	listErr     error
 	listRecords []store.BucketRecord
 	listCalls   int
+
+	getByNameErr      error
+	getByNameResponse store.BucketRecord
+	getByNameCalls    []string
 }
 
 var _ store.BucketStore = (*BucketStoreFake)(nil)
@@ -59,6 +63,12 @@ func (f *BucketStoreFake) SetListRecords(records []store.BucketRecord) {
 	f.listRecords = append([]store.BucketRecord(nil), records...)
 }
 
+func (f *BucketStoreFake) SetGetByNameError(err error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.getByNameErr = err
+}
+
 func (f *BucketStoreFake) Create(ctx context.Context, id, name string, createdAt time.Time) (store.BucketRecord, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
@@ -89,6 +99,28 @@ func (f *BucketStoreFake) List(ctx context.Context) ([]store.BucketRecord, error
 	records := make([]store.BucketRecord, len(f.listRecords))
 	copy(records, f.listRecords)
 	return records, nil
+}
+
+func (f *BucketStoreFake) GetByName(ctx context.Context, name string) (store.BucketRecord, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+
+	f.getByNameCalls = append(f.getByNameCalls, name)
+
+	if f.getByNameErr != nil {
+		return store.BucketRecord{}, f.getByNameErr
+	}
+
+	return f.getByNameResponse, nil
+}
+
+func (f *BucketStoreFake) GetByNameCalls() []string {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+
+	calls := make([]string, len(f.getByNameCalls))
+	copy(calls, f.getByNameCalls)
+	return calls
 }
 
 func (f *BucketStoreFake) Calls() []BucketCreateCall {

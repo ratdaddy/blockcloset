@@ -78,7 +78,7 @@ func TestCreateBucket_ValidationGantryAndResponse(t *testing.T) {
 			gantryErr:    nil,
 			wantStatus:   http.StatusBadRequest,
 			wantLoc:      "",
-			wantBodySub:  validation.ErrInvalidBucketName.Error(),
+			wantBodySub:  "InvalidBucketName",
 		},
 		{
 			name:         "gantry internal error -> 500",

@@ -12,6 +12,7 @@ import (
 )
 
 var ErrBucketAlreadyExists = errors.New("bucket already exists")
+var ErrBucketNotFound = errors.New("bucket not found")
 
 type bucketStore struct {
 	db *sql.DB
@@ -77,4 +78,23 @@ func (s *bucketStore) List(ctx context.Context) ([]BucketRecord, error) {
 	}
 
 	return records, nil
+}
+
+func (s *bucketStore) GetByName(ctx context.Context, name string) (BucketRecord, error) {
+	const selectBucket = `SELECT id, name, created_at, updated_at FROM buckets WHERE name = ?`
+
+	var (
+		rec       BucketRecord
+		createdAt int64
+		updatedAt int64
+	)
+
+	if err := s.db.QueryRowContext(ctx, selectBucket, name).Scan(&rec.ID, &rec.Name, &createdAt, &updatedAt); err != nil {
+		return BucketRecord{}, fmt.Errorf("get bucket by name: %w", ErrBucketNotFound)
+	}
+
+	rec.CreatedAt = time.UnixMicro(createdAt).UTC()
+	rec.UpdatedAt = time.UnixMicro(updatedAt).UTC()
+
+	return rec, nil
 }

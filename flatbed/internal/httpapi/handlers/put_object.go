@@ -4,7 +4,11 @@ import (
 	"net/http"
 	"strconv"
 
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"github.com/ratdaddy/blockcloset/flatbed/internal/httpapi/respond"
+	"github.com/ratdaddy/blockcloset/flatbed/internal/logger"
 )
 
 const maxPutBytes = 5 * 1024 * 1024 * 1024 // 5 GiB
@@ -52,7 +56,24 @@ func (h *Handlers) PutObject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, _, _ = h.Gantry.ResolveWrite(r.Context(), bucket, key, contentLength)
+	if _, _, err := h.Gantry.ResolveWrite(r.Context(), bucket, key, contentLength); err != nil {
+		st, ok := status.FromError(err)
+		if !ok {
+			respond.Error(w, r, "InternalError", http.StatusInternalServerError)
+			return
+		}
+
+		switch st.Code() {
+		case codes.NotFound:
+			respond.Error(w, r, "NoSuchBucket", http.StatusNotFound)
+		case codes.PermissionDenied:
+			respond.Error(w, r, "AccessDenied", http.StatusForbidden)
+		default:
+			logger.LogGantryError(r, err)
+			respond.Error(w, r, "InternalError", http.StatusInternalServerError)
+		}
+		return
+	}
 
 	w.WriteHeader(http.StatusOK)
 }

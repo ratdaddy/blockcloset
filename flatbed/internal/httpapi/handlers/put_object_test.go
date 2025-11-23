@@ -1,32 +1,51 @@
 package handlers_test
 
 import (
+	"context"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"github.com/ratdaddy/blockcloset/flatbed/internal/httpapi/handlers"
 	"github.com/ratdaddy/blockcloset/flatbed/internal/testutil"
 	"github.com/ratdaddy/blockcloset/pkg/validation"
+	servicev1 "github.com/ratdaddy/blockcloset/proto/gen/gantry/service/v1"
 )
+
+func resolveWriteErr(code codes.Code, message string, reason servicev1.ResolveWriteError_Reason, bucket string) error {
+	st := status.New(code, message)
+	detail := &servicev1.ResolveWriteError{
+		Reason: reason,
+		Bucket: bucket,
+	}
+	st, err := st.WithDetails(detail)
+	if err != nil {
+		panic(err)
+	}
+	return st.Err()
+}
 
 func TestPutObject_ValidationGantryAndResponse(t *testing.T) {
 	t.Parallel()
 
 	type tc struct {
-		name              string
-		bucket            string
-		key               string
-		contentLength     string // empty string means omit header
-		transferEncoding  string // if set, adds Transfer-Encoding header
-		wantStatus        int
-		wantResolves      int
-		wantBucket        string
-		wantKey           string
-		wantSize          int64
-		wantBodySubstr    string
+		name             string
+		bucket           string
+		key              string
+		contentLength    string // empty string means omit header
+		transferEncoding string // if set, adds Transfer-Encoding header
+		gantryErr        error
+		wantStatus       int
+		wantResolves     int
+		wantBucket       string
+		wantKey          string
+		wantSize         int64
+		wantBodySubstr   string
 	}
 
 	cases := []tc{
@@ -96,11 +115,52 @@ func TestPutObject_ValidationGantryAndResponse(t *testing.T) {
 			wantResolves:   0,
 			wantBodySubstr: "InvalidKeyName",
 		},
+		{
+			name:          "gantry bucket not found -> 404",
+			bucket:        "nonexistent-bucket",
+			key:           "my-key",
+			contentLength: "1024",
+			gantryErr: resolveWriteErr(
+				codes.NotFound,
+				"bucket not found",
+				servicev1.ResolveWriteError_REASON_BUCKET_NOT_FOUND,
+				"nonexistent-bucket",
+			),
+			wantStatus:     http.StatusNotFound,
+			wantResolves:   1,
+			wantBucket:     "nonexistent-bucket",
+			wantKey:        "my-key",
+			wantSize:       1024,
+			wantBodySubstr: "NoSuchBucket",
+		},
+		{
+			name:          "gantry bucket access denied -> 403",
+			bucket:        "forbidden-bucket",
+			key:           "my-key",
+			contentLength: "1024",
+			gantryErr: resolveWriteErr(
+				codes.PermissionDenied,
+				"access denied",
+				servicev1.ResolveWriteError_REASON_BUCKET_ACCESS_DENIED,
+				"forbidden-bucket",
+			),
+			wantStatus:     http.StatusForbidden,
+			wantResolves:   1,
+			wantBucket:     "forbidden-bucket",
+			wantKey:        "my-key",
+			wantSize:       1024,
+			wantBodySubstr: "AccessDenied",
+		},
 	}
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			stub := testutil.NewGantryStub()
+			if c.gantryErr != nil {
+				stub.ResolveWriteFn = func(context.Context, string, string, int64) (string, string, error) {
+					return "", "", c.gantryErr
+				}
+			}
 			h := &handlers.Handlers{
 				BucketValidator: validation.DefaultBucketNameValidator{},
 				KeyValidator:    validation.DefaultKeyValidator{},

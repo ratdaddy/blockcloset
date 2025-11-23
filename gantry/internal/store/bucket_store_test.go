@@ -179,6 +179,76 @@ func TestBucketStore_List(t *testing.T) {
 	}
 }
 
+func TestBucketStore_GetByName(t *testing.T) {
+	t.Parallel()
+
+	type tc struct {
+		name    string
+		bucket  string
+		setup   func(context.Context, *testing.T, store.BucketStore, time.Time)
+		wantID  string
+		wantErr error
+	}
+
+	cases := []tc{
+		{
+			name:   "bucket exists returns record",
+			bucket: "existing-bucket",
+			setup: func(ctx context.Context, t *testing.T, s store.BucketStore, createdAt time.Time) {
+				t.Helper()
+				if _, err := s.Create(ctx, "bucket-id-123", "existing-bucket", createdAt); err != nil {
+					t.Fatalf("seed create: %v", err)
+				}
+			},
+			wantID: "bucket-id-123",
+		},
+		{
+			name:    "bucket missing returns ErrBucketNotFound",
+			bucket:  "nonexistent-bucket",
+			wantErr: store.ErrBucketNotFound,
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+
+			ctx := context.Background()
+			db := openIsolatedDB(t)
+			s := store.NewBucketStore(db)
+			createdAt := time.Now().UTC()
+
+			if c.setup != nil {
+				c.setup(ctx, t, s, createdAt)
+			}
+
+			rec, err := s.GetByName(ctx, c.bucket)
+
+			if c.wantErr != nil {
+				if err == nil {
+					t.Fatalf("GetByName: expected error %v", c.wantErr)
+				}
+				if !errors.Is(err, c.wantErr) {
+					t.Fatalf("GetByName error: got %v want %v", err, c.wantErr)
+				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("GetByName: unexpected error: %v", err)
+			}
+
+			if rec.ID != c.wantID {
+				t.Fatalf("GetByName: id mismatch: got %q want %q", rec.ID, c.wantID)
+			}
+
+			if rec.Name != c.bucket {
+				t.Fatalf("GetByName: name mismatch: got %q want %q", rec.Name, c.bucket)
+			}
+		})
+	}
+}
+
 func assertBucketRecord(t *testing.T, ctx context.Context, db *sql.DB, rec store.BucketRecord, wantID string, expectedStamp time.Time) {
 	t.Helper()
 

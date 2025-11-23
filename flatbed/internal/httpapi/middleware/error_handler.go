@@ -18,15 +18,20 @@ func ErrorHandler(next http.Handler) http.Handler {
 
 		next.ServeHTTP(buf, r)
 
-		// Override 404 and 405 responses with custom error messages
-		if buf.statusCode == http.StatusNotFound || buf.statusCode == http.StatusMethodNotAllowed {
-			// Discard buffered response and send custom error
-			// Treat 405 as 404 for S3 compatibility
+		// Always convert 405 to 404 for S3 compatibility
+		if buf.statusCode == http.StatusMethodNotAllowed {
 			respond.Error(w, r, "page not found", http.StatusNotFound)
 			return
 		}
 
-		// For all other status codes, flush the buffered response
+		// For 404: only override if handler didn't write a body (router-level 404)
+		// If handler wrote a body (e.g., "NoSuchBucket"), let it pass through
+		if buf.statusCode == http.StatusNotFound && len(buf.body) == 0 {
+			respond.Error(w, r, "page not found", http.StatusNotFound)
+			return
+		}
+
+		// Flush the buffered response
 		buf.flush()
 	})
 }
