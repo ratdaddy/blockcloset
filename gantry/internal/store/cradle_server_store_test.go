@@ -3,6 +3,7 @@ package store_test
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"testing"
 	"time"
 
@@ -83,6 +84,83 @@ func TestCradleServerStore_Upsert(t *testing.T) {
 			}
 
 			assertCradleServerRow(t, ctx, db, c.address, rec.ID, wantCreated, wantUpdated)
+		})
+	}
+}
+
+func TestCradleServerStore_SelectForUpload(t *testing.T) {
+	t.Parallel()
+
+	type seed struct {
+		id      string
+		address string
+	}
+
+	type tc struct {
+		name    string
+		seeds   []seed
+		wantErr error
+	}
+
+	cases := []tc{
+		{
+			name: "servers exist returns one",
+			seeds: []seed{
+				{id: "cradle-1", address: "127.0.0.1:9001"},
+				{id: "cradle-2", address: "127.0.0.1:9002"},
+			},
+			wantErr: nil,
+		},
+		{
+			name:    "no servers returns ErrNoCradleServersAvailable",
+			seeds:   nil,
+			wantErr: store.ErrNoCradleServersAvailable,
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+
+			ctx := context.Background()
+			db := openIsolatedDB(t)
+			s := store.NewCradleServerStore(db)
+			now := time.Now().UTC()
+
+			// Seed cradle servers
+			for _, seed := range c.seeds {
+				if _, err := s.Upsert(ctx, seed.id, seed.address, now); err != nil {
+					t.Fatalf("seed upsert %q: %v", seed.address, err)
+				}
+			}
+
+			rec, err := s.SelectForUpload(ctx)
+
+			if c.wantErr != nil {
+				if err == nil {
+					t.Fatalf("SelectForUpload: expected error %v, got nil", c.wantErr)
+				}
+				if !errors.Is(err, c.wantErr) {
+					t.Fatalf("SelectForUpload error: got %v, want %v", err, c.wantErr)
+				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("SelectForUpload: unexpected error: %v", err)
+			}
+
+			// Verify returned record is one of the seeded servers
+			found := false
+			for _, seed := range c.seeds {
+				if rec.ID == seed.id && rec.Address == seed.address {
+					found = true
+					break
+				}
+			}
+			if !found {
+				t.Fatalf("SelectForUpload: returned record %+v not in seeded servers", rec)
+			}
 		})
 	}
 }
