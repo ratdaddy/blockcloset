@@ -128,6 +128,9 @@ curl -i -X PUT --data 'hello' http://$FLATBED_ADDR/forbidden/object`
 
 # put object with an invalid key name:
 curl -i -X PUT -d 'hello' http://$FLATBED_ADDR/my-bucket/$(head -c 1025 /dev/zero | tr '\0' 'a')
+
+# put object with no cradle servers:
+curl -i -X PUT --data 'hello' http://$FLATBED_ADDR/no-cradle/object`
 ```
 
 Grpcurl example to run directly with gantry:

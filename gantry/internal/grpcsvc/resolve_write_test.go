@@ -16,18 +16,21 @@ func TestService_ResolveWrite(t *testing.T) {
 	t.Parallel()
 
 	type tc struct {
-		name                  string
-		bucket                string
-		key                   string
-		size                  int64
-		getByNameErr          error
-		wantErr               bool
-		wantCode              codes.Code
-		wantErrorDetail       bool
-		wantErrorReason       servicev1.ResolveWriteError_Reason
-		wantObjectID          bool
-		wantCradleAddress     bool
-		expectGetByNameCall   bool
+		name                    string
+		bucket                  string
+		key                     string
+		size                    int64
+		getByNameErr            error
+		cradleAddress           string
+		selectForUploadErr      error
+		wantErr                 bool
+		wantCode                codes.Code
+		wantErrorDetail         bool
+		wantErrorReason         servicev1.ResolveWriteError_Reason
+		wantObjectID            bool
+		wantCradleAddress       string
+		expectGetByNameCall     bool
+		expectSelectForUpload   bool
 	}
 
 	cases := []tc{
@@ -36,9 +39,11 @@ func TestService_ResolveWrite(t *testing.T) {
 			bucket:                "my-bucket",
 			key:                   "my-key.txt",
 			size:                  1024,
+			cradleAddress:         "127.0.0.1:9444",
 			wantObjectID:          true,
-			wantCradleAddress:     true,
+			wantCradleAddress:     "127.0.0.1:9444",
 			expectGetByNameCall:   true,
+			expectSelectForUpload: true,
 		},
 		{
 			name:                "bucket not found returns NotFound",
@@ -51,6 +56,19 @@ func TestService_ResolveWrite(t *testing.T) {
 			wantErrorDetail:     true,
 			wantErrorReason:     servicev1.ResolveWriteError_REASON_BUCKET_NOT_FOUND,
 			expectGetByNameCall: true,
+		},
+		{
+			name:                  "no cradle servers returns FailedPrecondition",
+			bucket:                "my-bucket",
+			key:                   "my-key.txt",
+			size:                  1024,
+			selectForUploadErr:    store.ErrNoCradleServersAvailable,
+			wantErr:               true,
+			wantCode:              codes.FailedPrecondition,
+			wantErrorDetail:       true,
+			wantErrorReason:       servicev1.ResolveWriteError_REASON_NO_CRADLE_SERVERS,
+			expectGetByNameCall:   true,
+			expectSelectForUpload: true,
 		},
 	}
 
@@ -65,7 +83,18 @@ func TestService_ResolveWrite(t *testing.T) {
 			if c.getByNameErr != nil {
 				buckets.SetGetByNameError(c.getByNameErr)
 			}
-			svc.store = testutil.NewFakeStore(buckets, nil)
+
+			cradles := testutil.NewFakeCradleStore()
+			if c.cradleAddress != "" {
+				cradles.SetSelectForUploadResponse(store.CradleServerRecord{
+					Address: c.cradleAddress,
+				})
+			}
+			if c.selectForUploadErr != nil {
+				cradles.SetSelectForUploadError(c.selectForUploadErr)
+			}
+
+			svc.store = testutil.NewFakeStore(buckets, cradles)
 
 			resp, err := svc.ResolveWrite(context.Background(), &servicev1.ResolveWriteRequest{
 				Bucket: c.bucket,
@@ -97,8 +126,14 @@ func TestService_ResolveWrite(t *testing.T) {
 				t.Fatal("expected non-empty object_id")
 			}
 
-			if c.wantCradleAddress && resp.GetCradleAddress() == "" {
-				t.Fatal("expected non-empty cradle_address")
+			if c.expectSelectForUpload {
+				if cradles.SelectForUploadCallCount() != 1 {
+					t.Fatalf("SelectForUpload calls: got %d, want 1", cradles.SelectForUploadCallCount())
+				}
+			}
+
+			if c.wantCradleAddress != "" && resp.GetCradleAddress() != c.wantCradleAddress {
+				t.Fatalf("cradle_address: got %q, want %q", resp.GetCradleAddress(), c.wantCradleAddress)
 			}
 		})
 	}
