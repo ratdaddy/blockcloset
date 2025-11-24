@@ -97,7 +97,7 @@ curl -i -X PUT http://$FLATBED_ADDR/invalid_name!
 curl -i -X PUT http://$FLATBED_ADDR/bad
 
 # create bucket with a bucket name we don't own:
-curl -i -X PUT http://$FLATBED_ADDR/forbidden
+curl -i -X PUT http://$FLATBED_ADDR/taken
 
 # panic gantry:
 curl -i -X PUT http://$FLATBED_ADDR/panic
@@ -124,13 +124,16 @@ curl -i -X PUT --data '' http://$FLATBED_ADDR/hello/object -H "Content-Length: 5
 curl -i -X PUT --data 'hello' http://$FLATBED_ADDR/Invalid-name/object
 
 # put object with a bucket name we don't own:
-curl -i -X PUT --data 'hello' http://$FLATBED_ADDR/forbidden/object`
+curl -i -X PUT --data 'hello' http://$FLATBED_ADDR/forbidden/object
 
 # put object with an invalid key name:
 curl -i -X PUT -d 'hello' http://$FLATBED_ADDR/my-bucket/$(head -c 1025 /dev/zero | tr '\0' 'a')
 
 # put object with no cradle servers:
-curl -i -X PUT --data 'hello' http://$FLATBED_ADDR/no-cradle/object`
+curl -i -X PUT --data 'hello' http://$FLATBED_ADDR/no-cradles/object
+
+# put object panic gantry:
+curl -i -X PUT --data 'hello' http://$FLATBED_ADDR/panic/object
 ```
 
 Grpcurl example to run directly with gantry:

@@ -17,32 +17,8 @@ func (s *Service) ResolveWrite(ctx context.Context, req *servicev1.ResolveWriteR
 	key := req.GetKey()
 	size := req.GetSize()
 
-	// Special bucket name for testing access denied
-	if bucket == "forbidden" {
-		detail := &servicev1.ResolveWriteError{
-			Reason: servicev1.ResolveWriteError_REASON_BUCKET_ACCESS_DENIED,
-			Bucket: bucket,
-		}
-		st := status.New(codes.PermissionDenied, "access denied")
-		withDetail, err := st.WithDetails(detail)
-		if err != nil {
-			return nil, loggrpc.SetError(ctx, status.Error(codes.Internal, err.Error()))
-		}
-		return nil, loggrpc.SetError(ctx, withDetail.Err())
-	}
-
-	// Special bucket name for testing no cradle servers
-	if bucket == "no-cradles" {
-		detail := &servicev1.ResolveWriteError{
-			Reason: servicev1.ResolveWriteError_REASON_NO_CRADLE_SERVERS,
-			Bucket: bucket,
-		}
-		st := status.New(codes.FailedPrecondition, "no cradle servers available")
-		withDetail, err := st.WithDetails(detail)
-		if err != nil {
-			return nil, loggrpc.SetError(ctx, status.Error(codes.Internal, err.Error()))
-		}
-		return nil, loggrpc.SetError(ctx, withDetail.Err())
+	if err := checkTestBucket(bucket); err != nil {
+		return nil, loggrpc.SetError(ctx, err)
 	}
 
 	buckets := s.store.Buckets()
