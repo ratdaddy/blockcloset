@@ -68,6 +68,9 @@ func (h *Handlers) PutObject(w http.ResponseWriter, r *http.Request) {
 			respond.Error(w, r, "NoSuchBucket", http.StatusNotFound)
 		case codes.PermissionDenied:
 			respond.Error(w, r, "AccessDenied", http.StatusForbidden)
+		case codes.FailedPrecondition:
+			logger.LogGantryError(r, err)
+			respond.Error(w, r, "ServiceUnavailable", http.StatusServiceUnavailable)
 		default:
 			logger.LogGantryError(r, err)
 			respond.Error(w, r, "InternalError", http.StatusInternalServerError)

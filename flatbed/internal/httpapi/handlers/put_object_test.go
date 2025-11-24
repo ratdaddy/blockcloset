@@ -151,6 +151,37 @@ func TestPutObject_ValidationGantryAndResponse(t *testing.T) {
 			wantSize:       1024,
 			wantBodySubstr: "AccessDenied",
 		},
+		{
+			name:          "gantry no cradle servers -> 503",
+			bucket:        "my-bucket",
+			key:           "my-key",
+			contentLength: "1024",
+			gantryErr: resolveWriteErr(
+				codes.FailedPrecondition,
+				"no cradle servers available",
+				servicev1.ResolveWriteError_REASON_NO_CRADLE_SERVERS,
+				"my-bucket",
+			),
+			wantStatus:     http.StatusServiceUnavailable,
+			wantResolves:   1,
+			wantBucket:     "my-bucket",
+			wantKey:        "my-key",
+			wantSize:       1024,
+			wantBodySubstr: "ServiceUnavailable",
+		},
+		{
+			name:          "gantry unexpected error -> 500",
+			bucket:        "my-bucket",
+			key:           "my-key",
+			contentLength: "1024",
+			gantryErr:     status.Error(codes.Internal, "unexpected database error"),
+			wantStatus:    http.StatusInternalServerError,
+			wantResolves:  1,
+			wantBucket:    "my-bucket",
+			wantKey:       "my-key",
+			wantSize:      1024,
+			wantBodySubstr: "InternalError",
+		},
 	}
 
 	for _, c := range cases {
