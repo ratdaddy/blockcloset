@@ -65,8 +65,9 @@ func TestCradleServerStore_Upsert(t *testing.T) {
 
 				wantUpdated = c.secondStamp.UTC().Truncate(time.Microsecond)
 
-				if rec.ID != c.secondID {
-					t.Fatalf("ID mismatch: got %s want %s", rec.ID, c.secondID)
+				// ID should remain unchanged (preserves FK references)
+				if rec.ID != c.firstID {
+					t.Fatalf("ID mismatch: got %s want %s (should preserve original ID)", rec.ID, c.firstID)
 				}
 			} else if rec.ID != c.firstID {
 				t.Fatalf("ID mismatch: got %s want %s", rec.ID, c.firstID)
@@ -83,7 +84,7 @@ func TestCradleServerStore_Upsert(t *testing.T) {
 				t.Fatalf("UpdatedAt mismatch: got %s want %s", rec.UpdatedAt, wantUpdated)
 			}
 
-			assertCradleServerRow(t, ctx, db, c.address, rec.ID, wantCreated, wantUpdated)
+			assertCradleServerRow(t, ctx, db, c.address, c.firstID, wantCreated, wantUpdated)
 		})
 	}
 }
