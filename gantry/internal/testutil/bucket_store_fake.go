@@ -69,6 +69,12 @@ func (f *BucketStoreFake) SetGetByNameError(err error) {
 	f.getByNameErr = err
 }
 
+func (f *BucketStoreFake) SetGetByNameResponse(rec store.BucketRecord) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.getByNameResponse = rec
+}
+
 func (f *BucketStoreFake) Create(ctx context.Context, id, name string, createdAt time.Time) (store.BucketRecord, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()

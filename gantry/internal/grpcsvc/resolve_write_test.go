@@ -2,8 +2,10 @@ package grpcsvc
 
 import (
 	"context"
+	"errors"
 	"testing"
 
+	"github.com/oklog/ulid/v2"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -16,21 +18,25 @@ func TestService_ResolveWrite(t *testing.T) {
 	t.Parallel()
 
 	type tc struct {
-		name                    string
-		bucket                  string
-		key                     string
-		size                    int64
-		getByNameErr            error
-		cradleAddress           string
-		selectForUploadErr      error
-		wantErr                 bool
-		wantCode                codes.Code
-		wantErrorDetail         bool
-		wantErrorReason         servicev1.ResolveWriteError_Reason
-		wantObjectID            bool
-		wantCradleAddress       string
-		expectGetByNameCall     bool
-		expectSelectForUpload   bool
+		name                  string
+		bucket                string
+		key                   string
+		size                  int64
+		bucketID              string
+		getByNameErr          error
+		cradleID              string
+		cradleAddress         string
+		selectForUploadErr    error
+		objectCreateErr       error
+		wantErr               bool
+		wantCode              codes.Code
+		wantErrorDetail       bool
+		wantErrorReason       servicev1.ResolveWriteError_Reason
+		wantObjectID          bool
+		wantCradleAddress     string
+		expectGetByNameCall   bool
+		expectSelectForUpload bool
+		expectObjectCreate    bool
 	}
 
 	cases := []tc{
@@ -39,11 +45,14 @@ func TestService_ResolveWrite(t *testing.T) {
 			bucket:                "my-bucket",
 			key:                   "my-key.txt",
 			size:                  1024,
+			bucketID:              "bucket-id-123",
+			cradleID:              "cradle-id-456",
 			cradleAddress:         "127.0.0.1:9444",
 			wantObjectID:          true,
 			wantCradleAddress:     "127.0.0.1:9444",
 			expectGetByNameCall:   true,
 			expectSelectForUpload: true,
+			expectObjectCreate:    true,
 		},
 		{
 			name:                "bucket not found returns NotFound",
@@ -70,6 +79,21 @@ func TestService_ResolveWrite(t *testing.T) {
 			expectGetByNameCall:   true,
 			expectSelectForUpload: true,
 		},
+		{
+			name:                  "object store error returns Internal",
+			bucket:                "my-bucket",
+			key:                   "my-key.txt",
+			size:                  1024,
+			bucketID:              "bucket-id-123",
+			cradleID:              "cradle-id-456",
+			cradleAddress:         "127.0.0.1:9444",
+			objectCreateErr:       errors.New("object store error"),
+			wantErr:               true,
+			wantCode:              codes.Internal,
+			expectGetByNameCall:   true,
+			expectSelectForUpload: true,
+			expectObjectCreate:    true,
+		},
 	}
 
 	for _, c := range cases {
@@ -82,11 +106,17 @@ func TestService_ResolveWrite(t *testing.T) {
 			buckets := testutil.NewFakeBucketStore()
 			if c.getByNameErr != nil {
 				buckets.SetGetByNameError(c.getByNameErr)
+			} else if c.bucketID != "" {
+				buckets.SetGetByNameResponse(store.BucketRecord{
+					ID:   c.bucketID,
+					Name: c.bucket,
+				})
 			}
 
 			cradles := testutil.NewFakeCradleStore()
 			if c.cradleAddress != "" {
 				cradles.SetSelectForUploadResponse(store.CradleServerRecord{
+					ID:      c.cradleID,
 					Address: c.cradleAddress,
 				})
 			}
@@ -94,7 +124,16 @@ func TestService_ResolveWrite(t *testing.T) {
 				cradles.SetSelectForUploadError(c.selectForUploadErr)
 			}
 
-			svc.store = testutil.NewFakeStore(testutil.WithBuckets(buckets), testutil.WithCradles(cradles))
+			objects := testutil.NewFakeObjectStore()
+			if c.objectCreateErr != nil {
+				objects.SetCreateError(c.objectCreateErr)
+			}
+
+			svc.store = testutil.NewFakeStore(
+				testutil.WithBuckets(buckets),
+				testutil.WithCradles(cradles),
+				testutil.WithObjects(objects),
+			)
 
 			resp, err := svc.ResolveWrite(context.Background(), &servicev1.ResolveWriteRequest{
 				Bucket: c.bucket,
@@ -122,10 +161,6 @@ func TestService_ResolveWrite(t *testing.T) {
 
 			assertNoError(t, err)
 
-			if c.wantObjectID && resp.GetObjectId() == "" {
-				t.Fatal("expected non-empty object_id")
-			}
-
 			if c.expectSelectForUpload {
 				if cradles.SelectForUploadCallCount() != 1 {
 					t.Fatalf("SelectForUpload calls: got %d, want 1", cradles.SelectForUploadCallCount())
@@ -134,6 +169,43 @@ func TestService_ResolveWrite(t *testing.T) {
 
 			if c.wantCradleAddress != "" && resp.GetCradleAddress() != c.wantCradleAddress {
 				t.Fatalf("cradle_address: got %q, want %q", resp.GetCradleAddress(), c.wantCradleAddress)
+			}
+
+			if c.wantObjectID {
+				if _, err := ulid.Parse(resp.GetObjectId()); err != nil {
+					t.Fatalf("response object_id %q not a valid ULID: %v", resp.GetObjectId(), err)
+				}
+			}
+
+			if c.expectObjectCreate {
+				calls := objects.Calls()
+				if len(calls) != 1 {
+					t.Fatalf("Objects().Create calls: got %d, want 1", len(calls))
+				}
+
+				call := calls[0]
+
+				// Verify object_id was passed to Create and matches response
+				if c.wantObjectID && call.ID != resp.GetObjectId() {
+					t.Fatalf("Create object_id: got %q, want %q (from response)", call.ID, resp.GetObjectId())
+				}
+
+				if call.BucketID != c.bucketID {
+					t.Fatalf("Create bucket_id: got %q, want %q", call.BucketID, c.bucketID)
+				}
+				if call.Key != c.key {
+					t.Fatalf("Create key: got %q, want %q", call.Key, c.key)
+				}
+				if call.SizeExpected != c.size {
+					t.Fatalf("Create size: got %d, want %d", call.SizeExpected, c.size)
+				}
+				if call.CradleServerID != c.cradleID {
+					t.Fatalf("Create cradle_server_id: got %q, want %q", call.CradleServerID, c.cradleID)
+				}
+
+				if call.CreatedAt.IsZero() {
+					t.Fatal("Create createdAt timestamp not populated")
+				}
 			}
 		})
 	}

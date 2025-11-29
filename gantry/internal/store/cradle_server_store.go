@@ -34,7 +34,6 @@ INSERT INTO cradle_servers (id, address, created_at, updated_at)
 VALUES ($1, $2, $3, $3)
 ON CONFLICT (address)
 DO UPDATE SET
-	id = EXCLUDED.id,
 	updated_at = EXCLUDED.updated_at
 RETURNING id, address, created_at, updated_at;
 `
