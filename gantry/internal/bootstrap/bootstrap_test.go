@@ -17,7 +17,7 @@ func TestInitSeedsCradleServer(t *testing.T) {
 
 	ctx := context.Background()
 	cradle := testutil.NewFakeCradleStore()
-	st := testutil.NewFakeStore(nil, cradle)
+	st := testutil.NewFakeStore(testutil.WithCradles(cradle))
 
 	if err := Init(ctx, st); err != nil {
 		t.Fatalf("Init: unexpected error: %v", err)

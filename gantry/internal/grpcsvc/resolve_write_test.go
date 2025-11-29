@@ -94,7 +94,7 @@ func TestService_ResolveWrite(t *testing.T) {
 				cradles.SetSelectForUploadError(c.selectForUploadErr)
 			}
 
-			svc.store = testutil.NewFakeStore(buckets, cradles)
+			svc.store = testutil.NewFakeStore(testutil.WithBuckets(buckets), testutil.WithCradles(cradles))
 
 			resp, err := svc.ResolveWrite(context.Background(), &servicev1.ResolveWriteRequest{
 				Bucket: c.bucket,

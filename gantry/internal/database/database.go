@@ -47,5 +47,11 @@ func OpenDatabase(ctx context.Context, dbPath string) (*sql.DB, error) {
 		return nil, fmt.Errorf("ping sqlite: %w", err)
 	}
 
+	// Enable foreign key constraints
+	if _, err := db.ExecContext(ctx, "PRAGMA foreign_keys = ON"); err != nil {
+		_ = db.Close()
+		return nil, fmt.Errorf("enable foreign keys: %w", err)
+	}
+
 	return db, nil
 }

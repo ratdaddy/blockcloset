@@ -17,20 +17,27 @@ type CradleServerStore interface {
 	SelectForUpload(ctx context.Context) (CradleServerRecord, error)
 }
 
+type ObjectStore interface {
+	Create(ctx context.Context, id, bucketID, key string, sizeExpected int64, cradleServerID string, createdAt time.Time) (ObjectRecord, error)
+}
+
 type Store interface {
 	Buckets() BucketStore
 	CradleServers() CradleServerStore
+	Objects() ObjectStore
 }
 
 type sqlStore struct {
 	buckets       BucketStore
 	cradleServers CradleServerStore
+	objects       ObjectStore
 }
 
 func New(db *sql.DB) Store {
 	return &sqlStore{
 		buckets:       NewBucketStore(db),
 		cradleServers: NewCradleServerStore(db),
+		objects:       NewObjectStore(db),
 	}
 }
 
@@ -40,4 +47,8 @@ func (s *sqlStore) Buckets() BucketStore {
 
 func (s *sqlStore) CradleServers() CradleServerStore {
 	return s.cradleServers
+}
+
+func (s *sqlStore) Objects() ObjectStore {
+	return s.objects
 }

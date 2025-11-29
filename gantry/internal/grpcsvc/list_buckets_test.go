@@ -75,7 +75,7 @@ func TestService_ListBuckets(t *testing.T) {
 			buckets.SetListRecords(c.records)
 			buckets.SetListError(c.listErr)
 
-			svc.store = testutil.NewFakeStore(buckets, nil)
+			svc.store = testutil.NewFakeStore(testutil.WithBuckets(buckets))
 
 			resp, err := svc.ListBuckets(context.Background(), &servicev1.ListBucketsRequest{})
 
