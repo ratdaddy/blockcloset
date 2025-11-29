@@ -79,7 +79,7 @@ func TestService_CreateBucket(t *testing.T) {
 			if c.storeErr != nil {
 				buckets.SetCreateError(c.storeErr)
 			}
-			svc.store = testutil.NewFakeStore(buckets, nil)
+			svc.store = testutil.NewFakeStore(testutil.WithBuckets(buckets))
 
 			resp, err := svc.CreateBucket(context.Background(), &servicev1.CreateBucketRequest{Name: c.bucket})
 

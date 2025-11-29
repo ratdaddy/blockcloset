@@ -29,7 +29,7 @@ func (s *cradleServerStore) Upsert(ctx context.Context, id string, address strin
 	stamp := updatedAt.UTC().Truncate(time.Microsecond)
 	micros := stamp.UnixMicro()
 
-	const query = `
+	const upsertObject = `
 INSERT INTO cradle_servers (id, address, created_at, updated_at)
 VALUES ($1, $2, $3, $3)
 ON CONFLICT (address)
@@ -39,7 +39,7 @@ DO UPDATE SET
 RETURNING id, address, created_at, updated_at;
 `
 
-	row := s.db.QueryRowContext(ctx, query, id, address, micros, micros)
+	row := s.db.QueryRowContext(ctx, upsertObject, id, address, micros, micros)
 
 	var (
 		rec       CradleServerRecord
@@ -56,9 +56,9 @@ RETURNING id, address, created_at, updated_at;
 }
 
 func (s *cradleServerStore) SelectForUpload(ctx context.Context) (CradleServerRecord, error) {
-	const query = `SELECT id, address, created_at, updated_at FROM cradle_servers LIMIT 1`
+	const selectCradleServer = `SELECT id, address, created_at, updated_at FROM cradle_servers LIMIT 1`
 
-	row := s.db.QueryRowContext(ctx, query)
+	row := s.db.QueryRowContext(ctx, selectCradleServer)
 
 	var (
 		rec       CradleServerRecord
