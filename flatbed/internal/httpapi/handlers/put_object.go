@@ -56,7 +56,8 @@ func (h *Handlers) PutObject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if _, _, err := h.Gantry.ResolveWrite(r.Context(), bucket, key, contentLength); err != nil {
+	objectID, cradleAddress, err := h.Gantry.ResolveWrite(r.Context(), bucket, key, contentLength)
+	if err != nil {
 		st, ok := status.FromError(err)
 		if !ok {
 			respond.Error(w, r, "InternalError", http.StatusInternalServerError)
@@ -77,6 +78,9 @@ func (h *Handlers) PutObject(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
+
+	// TODO(Phase 2): Stream request body to Cradle using objectID and cradleAddress
+	logger.LogWritePlan(r, objectID, cradleAddress, contentLength)
 
 	w.WriteHeader(http.StatusOK)
 }
