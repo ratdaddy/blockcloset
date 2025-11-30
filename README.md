@@ -118,7 +118,7 @@ curl -i -X PUT --data '' http://$FLATBED_ADDR/hello/object
 curl -i -X PUT --data '' http://$FLATBED_ADDR/hello/object -H "Content-Length: 5368709121"
 
 # put object with invalid transfer encoding:
-  curl -i -X PUT -H "Content-Length: 1024" -H "Transfer-Encoding: chunked" http://$FLATBED_ADDR/hello/object
+curl -i -X PUT -H "Content-Length: 1024" -H "Transfer-Encoding: chunked" http://$FLATBED_ADDR/hello/object
 
 # put object with an invalid bucket name:
 curl -i -X PUT --data 'hello' http://$FLATBED_ADDR/Invalid-name/object

@@ -14,7 +14,7 @@ import (
 	servicev1 "github.com/ratdaddy/blockcloset/proto/gen/gantry/service/v1"
 )
 
-func TestService_ResolveWrite(t *testing.T) {
+func TestService_PlanWrite(t *testing.T) {
 	t.Parallel()
 
 	type tc struct {
@@ -31,7 +31,7 @@ func TestService_ResolveWrite(t *testing.T) {
 		wantErr               bool
 		wantCode              codes.Code
 		wantErrorDetail       bool
-		wantErrorReason       servicev1.ResolveWriteError_Reason
+		wantErrorReason       servicev1.PlanWriteError_Reason
 		wantObjectID          bool
 		wantCradleAddress     string
 		expectGetByNameCall   bool
@@ -63,7 +63,7 @@ func TestService_ResolveWrite(t *testing.T) {
 			wantErr:             true,
 			wantCode:            codes.NotFound,
 			wantErrorDetail:     true,
-			wantErrorReason:     servicev1.ResolveWriteError_REASON_BUCKET_NOT_FOUND,
+			wantErrorReason:     servicev1.PlanWriteError_REASON_BUCKET_NOT_FOUND,
 			expectGetByNameCall: true,
 		},
 		{
@@ -75,7 +75,7 @@ func TestService_ResolveWrite(t *testing.T) {
 			wantErr:               true,
 			wantCode:              codes.FailedPrecondition,
 			wantErrorDetail:       true,
-			wantErrorReason:       servicev1.ResolveWriteError_REASON_NO_CRADLE_SERVERS,
+			wantErrorReason:       servicev1.PlanWriteError_REASON_NO_CRADLE_SERVERS,
 			expectGetByNameCall:   true,
 			expectSelectForUpload: true,
 		},
@@ -167,7 +167,7 @@ func TestService_ResolveWrite(t *testing.T) {
 				testutil.WithObjects(objects),
 			)
 
-			resp, err := svc.ResolveWrite(context.Background(), &servicev1.ResolveWriteRequest{
+			resp, err := svc.PlanWrite(context.Background(), &servicev1.PlanWriteRequest{
 				Bucket: c.bucket,
 				Key:    c.key,
 				Size:   c.size,
@@ -184,9 +184,9 @@ func TestService_ResolveWrite(t *testing.T) {
 			}
 
 			if c.wantErr {
-				assertResolveWriteError(t, err, c.wantCode)
+				assertPlanWriteError(t, err, c.wantCode)
 				if c.wantErrorDetail {
-					assertResolveWriteErrorDetail(t, err, c.wantErrorReason, c.bucket)
+					assertPlanWriteErrorDetail(t, err, c.wantErrorReason, c.bucket)
 				}
 				return
 			}
@@ -199,13 +199,18 @@ func TestService_ResolveWrite(t *testing.T) {
 				}
 			}
 
-			if c.wantCradleAddress != "" && resp.GetCradleAddress() != c.wantCradleAddress {
-				t.Fatalf("cradle_address: got %q, want %q", resp.GetCradleAddress(), c.wantCradleAddress)
+			writePlan := resp.GetWritePlan()
+			if writePlan == nil {
+				t.Fatal("response.write_plan is nil")
+			}
+
+			if c.wantCradleAddress != "" && writePlan.GetCradleAddress() != c.wantCradleAddress {
+				t.Fatalf("cradle_address: got %q, want %q", writePlan.GetCradleAddress(), c.wantCradleAddress)
 			}
 
 			if c.wantObjectID {
-				if _, err := ulid.Parse(resp.GetObjectId()); err != nil {
-					t.Fatalf("response object_id %q not a valid ULID: %v", resp.GetObjectId(), err)
+				if _, err := ulid.Parse(writePlan.GetObjectId()); err != nil {
+					t.Fatalf("response object_id %q not a valid ULID: %v", writePlan.GetObjectId(), err)
 				}
 			}
 
@@ -218,8 +223,8 @@ func TestService_ResolveWrite(t *testing.T) {
 				call := calls[0]
 
 				// Verify object_id was passed to CreatePending and matches response
-				if c.wantObjectID && call.ID != resp.GetObjectId() {
-					t.Fatalf("CreatePending object_id: got %q, want %q (from response)", call.ID, resp.GetObjectId())
+				if c.wantObjectID && call.ID != writePlan.GetObjectId() {
+					t.Fatalf("CreatePending object_id: got %q, want %q (from response)", call.ID, writePlan.GetObjectId())
 				}
 
 				if call.BucketID != c.bucketID {
@@ -243,7 +248,7 @@ func TestService_ResolveWrite(t *testing.T) {
 	}
 }
 
-func assertResolveWriteError(t *testing.T, err error, wantCode codes.Code) {
+func assertPlanWriteError(t *testing.T, err error, wantCode codes.Code) {
 	t.Helper()
 
 	if err == nil {
@@ -260,7 +265,7 @@ func assertResolveWriteError(t *testing.T, err error, wantCode codes.Code) {
 	}
 }
 
-func assertResolveWriteErrorDetail(t *testing.T, err error, wantReason servicev1.ResolveWriteError_Reason, wantBucket string) {
+func assertPlanWriteErrorDetail(t *testing.T, err error, wantReason servicev1.PlanWriteError_Reason, wantBucket string) {
 	t.Helper()
 
 	st, ok := status.FromError(err)
@@ -274,21 +279,21 @@ func assertResolveWriteErrorDetail(t *testing.T, err error, wantReason servicev1
 	}
 
 	for _, detail := range details {
-		resolveErr, ok := detail.(*servicev1.ResolveWriteError)
+		planErr, ok := detail.(*servicev1.PlanWriteError)
 		if !ok {
 			continue
 		}
 
-		if resolveErr.GetReason() != wantReason {
-			t.Fatalf("ResolveWriteError reason: got %v, want %v", resolveErr.GetReason(), wantReason)
+		if planErr.GetReason() != wantReason {
+			t.Fatalf("PlanWriteError reason: got %v, want %v", planErr.GetReason(), wantReason)
 		}
 
-		if resolveErr.GetBucket() != wantBucket {
-			t.Fatalf("ResolveWriteError bucket: got %q, want %q", resolveErr.GetBucket(), wantBucket)
+		if planErr.GetBucket() != wantBucket {
+			t.Fatalf("PlanWriteError bucket: got %q, want %q", planErr.GetBucket(), wantBucket)
 		}
 
 		return
 	}
 
-	t.Fatalf("status missing ResolveWriteError detail: %v", err)
+	t.Fatalf("status missing PlanWriteError detail: %v", err)
 }
