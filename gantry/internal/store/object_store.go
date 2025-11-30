@@ -26,7 +26,7 @@ type ObjectRecord struct {
 	UpdatedAt      time.Time
 }
 
-func (s *objectStore) Create(ctx context.Context, id, bucketID, key string, sizeExpected int64, cradleServerID string, createdAt time.Time) (ObjectRecord, error) {
+func (s *objectStore) CreatePending(ctx context.Context, id, bucketID, key string, sizeExpected int64, cradleServerID string, createdAt time.Time) (ObjectRecord, error) {
 	stamp := createdAt.UTC().Truncate(time.Microsecond)
 	micros := stamp.UnixMicro()
 

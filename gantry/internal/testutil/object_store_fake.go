@@ -46,7 +46,7 @@ func (f *ObjectStoreFake) SetCreateResponse(rec store.ObjectRecord) {
 	f.hasCreateResponse = true
 }
 
-func (f *ObjectStoreFake) Create(ctx context.Context, id, bucketID, key string, sizeExpected int64, cradleServerID string, createdAt time.Time) (store.ObjectRecord, error) {
+func (f *ObjectStoreFake) CreatePending(ctx context.Context, id, bucketID, key string, sizeExpected int64, cradleServerID string, createdAt time.Time) (store.ObjectRecord, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 

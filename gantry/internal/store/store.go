@@ -18,7 +18,7 @@ type CradleServerStore interface {
 }
 
 type ObjectStore interface {
-	Create(ctx context.Context, id, bucketID, key string, sizeExpected int64, cradleServerID string, createdAt time.Time) (ObjectRecord, error)
+	CreatePending(ctx context.Context, id, bucketID, key string, sizeExpected int64, cradleServerID string, createdAt time.Time) (ObjectRecord, error)
 }
 
 type Store interface {
