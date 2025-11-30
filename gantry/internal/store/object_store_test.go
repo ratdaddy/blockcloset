@@ -56,7 +56,7 @@ func TestObjectStore_Create(t *testing.T) {
 			cradleServerID: "cradle-id-1",
 			setup: func(ctx context.Context, t *testing.T, s *store.ObjectStore, createdAt time.Time, db *sql.DB, bucketID, cradleServerID string) {
 				// Create first object with same bucket+key
-				_, err := (*s).Create(ctx, "object-id-first", bucketID, "duplicate-key.txt", 1024, cradleServerID, createdAt)
+				_, err := (*s).CreatePending(ctx, "object-id-first", bucketID, "duplicate-key.txt", 1024, cradleServerID, createdAt)
 				if err != nil {
 					t.Fatalf("setup: create first object: %v", err)
 				}
@@ -82,17 +82,17 @@ func TestObjectStore_Create(t *testing.T) {
 				c.setup(ctx, t, &s, createdAt, db, c.bucketID, c.cradleServerID)
 			}
 
-			rec, err := s.Create(ctx, c.id, c.bucketID, c.key, c.sizeExpected, c.cradleServerID, createdAt)
+			rec, err := s.CreatePending(ctx, c.id, c.bucketID, c.key, c.sizeExpected, c.cradleServerID, createdAt)
 
 			if c.wantErr {
 				if err == nil {
-					t.Fatal("Create: expected error, got nil")
+					t.Fatal("CreatePending: expected error, got nil")
 				}
 				return
 			}
 
 			if err != nil {
-				t.Fatalf("Create: unexpected error: %v", err)
+				t.Fatalf("CreatePending: unexpected error: %v", err)
 			}
 
 			assertObjectRecord(t, ctx, db, rec, c.id, c.bucketID, c.key, c.sizeExpected, c.cradleServerID, createdAt)

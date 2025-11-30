@@ -94,6 +94,38 @@ func TestService_ResolveWrite(t *testing.T) {
 			expectSelectForUpload: true,
 			expectObjectCreate:    true,
 		},
+		{
+			name:     "invalid bucket name returns InvalidArgument",
+			bucket:   "Bad!Name",
+			key:      "my-key.txt",
+			size:     1024,
+			wantErr:  true,
+			wantCode: codes.InvalidArgument,
+		},
+		{
+			name:     "invalid key returns InvalidArgument",
+			bucket:   "my-bucket",
+			key:      "",
+			size:     1024,
+			wantErr:  true,
+			wantCode: codes.InvalidArgument,
+		},
+		{
+			name:     "zero size returns InvalidArgument",
+			bucket:   "my-bucket",
+			key:      "my-key.txt",
+			size:     0,
+			wantErr:  true,
+			wantCode: codes.InvalidArgument,
+		},
+		{
+			name:     "size exceeds max returns InvalidArgument",
+			bucket:   "my-bucket",
+			key:      "my-key.txt",
+			size:     5*1024*1024*1024 + 1, // 5GB + 1 byte
+			wantErr:  true,
+			wantCode: codes.InvalidArgument,
+		},
 	}
 
 	for _, c := range cases {
@@ -180,31 +212,31 @@ func TestService_ResolveWrite(t *testing.T) {
 			if c.expectObjectCreate {
 				calls := objects.Calls()
 				if len(calls) != 1 {
-					t.Fatalf("Objects().Create calls: got %d, want 1", len(calls))
+					t.Fatalf("Objects().CreatePending calls: got %d, want 1", len(calls))
 				}
 
 				call := calls[0]
 
-				// Verify object_id was passed to Create and matches response
+				// Verify object_id was passed to CreatePending and matches response
 				if c.wantObjectID && call.ID != resp.GetObjectId() {
-					t.Fatalf("Create object_id: got %q, want %q (from response)", call.ID, resp.GetObjectId())
+					t.Fatalf("CreatePending object_id: got %q, want %q (from response)", call.ID, resp.GetObjectId())
 				}
 
 				if call.BucketID != c.bucketID {
-					t.Fatalf("Create bucket_id: got %q, want %q", call.BucketID, c.bucketID)
+					t.Fatalf("CreatePending bucket_id: got %q, want %q", call.BucketID, c.bucketID)
 				}
 				if call.Key != c.key {
-					t.Fatalf("Create key: got %q, want %q", call.Key, c.key)
+					t.Fatalf("CreatePending key: got %q, want %q", call.Key, c.key)
 				}
 				if call.SizeExpected != c.size {
-					t.Fatalf("Create size: got %d, want %d", call.SizeExpected, c.size)
+					t.Fatalf("CreatePending size: got %d, want %d", call.SizeExpected, c.size)
 				}
 				if call.CradleServerID != c.cradleID {
-					t.Fatalf("Create cradle_server_id: got %q, want %q", call.CradleServerID, c.cradleID)
+					t.Fatalf("CreatePending cradle_server_id: got %q, want %q", call.CradleServerID, c.cradleID)
 				}
 
 				if call.CreatedAt.IsZero() {
-					t.Fatal("Create createdAt timestamp not populated")
+					t.Fatal("CreatePending createdAt timestamp not populated")
 				}
 			}
 		})

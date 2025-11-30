@@ -11,13 +11,38 @@ import (
 
 	"github.com/ratdaddy/blockcloset/gantry/internal/store"
 	"github.com/ratdaddy/blockcloset/loggrpc"
+	"github.com/ratdaddy/blockcloset/pkg/validation"
 	servicev1 "github.com/ratdaddy/blockcloset/proto/gen/gantry/service/v1"
 )
+
+const maxPutBytes = 5 * 1024 * 1024 * 1024 // 5 GiB
 
 func (s *Service) ResolveWrite(ctx context.Context, req *servicev1.ResolveWriteRequest) (*servicev1.ResolveWriteResponse, error) {
 	bucketName := req.GetBucket()
 	key := req.GetKey()
 	size := req.GetSize()
+
+	bucketValidator := validation.DefaultBucketNameValidator{}
+	keyValidator := validation.DefaultKeyValidator{}
+
+	//Validate size is greater than zero
+	if size <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "InvalidArgument")
+	}
+
+	if size > maxPutBytes {
+		return nil, status.Error(codes.InvalidArgument, "EntityTooLarge")
+	}
+
+	// Validate bucket name
+	if err := bucketValidator.ValidateBucketName(bucketName); err != nil {
+		return nil, status.Error(codes.InvalidArgument, "InvalidBucketName")
+	}
+
+	// Validate key
+	if err := keyValidator.ValidateKey(key); err != nil {
+		return nil, status.Error(codes.InvalidArgument, "InvalidKeyName")
+	}
 
 	if err := checkTestBucket(bucketName); err != nil {
 		return nil, loggrpc.SetError(ctx, err)
@@ -57,7 +82,7 @@ func (s *Service) ResolveWrite(ctx context.Context, req *servicev1.ResolveWriteR
 	objectID := store.NewID()
 	now := time.Now().UTC()
 	objects := s.store.Objects()
-	if _, err = objects.Create(ctx, objectID, bucket.ID, key, size, server.ID, now); err != nil {
+	if _, err = objects.CreatePending(ctx, objectID, bucket.ID, key, size, server.ID, now); err != nil {
 		return nil, loggrpc.SetError(ctx, status.Error(codes.Internal, err.Error()))
 	}
 
