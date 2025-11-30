@@ -22,3 +22,12 @@ func LogGantryError(r *http.Request, err error) {
 		slog.String("error.detail", err.Error()),
 	)
 }
+
+// LogWritePlan logs the write plan information returned from Gantry.
+func LogWritePlan(r *http.Request, objectID, cradleAddress string, size int64) {
+	httplog.SetAttrs(r.Context(),
+		slog.String("write_plan.object_id", objectID),
+		slog.String("write_plan.cradle_address", cradleAddress),
+		slog.Int64("write_plan.size", size),
+	)
+}
