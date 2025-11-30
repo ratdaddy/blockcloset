@@ -8,6 +8,7 @@ package servicev1
 
 import (
 	v1 "github.com/ratdaddy/blockcloset/proto/gen/gantry/bucket/v1"
+	v11 "github.com/ratdaddy/blockcloset/proto/gen/gantry/write_plan/v1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -71,24 +72,24 @@ func (BucketOwnershipConflict_Reason) EnumDescriptor() ([]byte, []int) {
 	return file_gantry_service_v1_service_proto_rawDescGZIP(), []int{2, 0}
 }
 
-type ResolveWriteError_Reason int32
+type PlanWriteError_Reason int32
 
 const (
-	ResolveWriteError_REASON_UNSPECIFIED          ResolveWriteError_Reason = 0
-	ResolveWriteError_REASON_BUCKET_NOT_FOUND     ResolveWriteError_Reason = 1
-	ResolveWriteError_REASON_BUCKET_ACCESS_DENIED ResolveWriteError_Reason = 2
-	ResolveWriteError_REASON_NO_CRADLE_SERVERS    ResolveWriteError_Reason = 3
+	PlanWriteError_REASON_UNSPECIFIED          PlanWriteError_Reason = 0
+	PlanWriteError_REASON_BUCKET_NOT_FOUND     PlanWriteError_Reason = 1
+	PlanWriteError_REASON_BUCKET_ACCESS_DENIED PlanWriteError_Reason = 2
+	PlanWriteError_REASON_NO_CRADLE_SERVERS    PlanWriteError_Reason = 3
 )
 
-// Enum value maps for ResolveWriteError_Reason.
+// Enum value maps for PlanWriteError_Reason.
 var (
-	ResolveWriteError_Reason_name = map[int32]string{
+	PlanWriteError_Reason_name = map[int32]string{
 		0: "REASON_UNSPECIFIED",
 		1: "REASON_BUCKET_NOT_FOUND",
 		2: "REASON_BUCKET_ACCESS_DENIED",
 		3: "REASON_NO_CRADLE_SERVERS",
 	}
-	ResolveWriteError_Reason_value = map[string]int32{
+	PlanWriteError_Reason_value = map[string]int32{
 		"REASON_UNSPECIFIED":          0,
 		"REASON_BUCKET_NOT_FOUND":     1,
 		"REASON_BUCKET_ACCESS_DENIED": 2,
@@ -96,30 +97,30 @@ var (
 	}
 )
 
-func (x ResolveWriteError_Reason) Enum() *ResolveWriteError_Reason {
-	p := new(ResolveWriteError_Reason)
+func (x PlanWriteError_Reason) Enum() *PlanWriteError_Reason {
+	p := new(PlanWriteError_Reason)
 	*p = x
 	return p
 }
 
-func (x ResolveWriteError_Reason) String() string {
+func (x PlanWriteError_Reason) String() string {
 	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
 }
 
-func (ResolveWriteError_Reason) Descriptor() protoreflect.EnumDescriptor {
+func (PlanWriteError_Reason) Descriptor() protoreflect.EnumDescriptor {
 	return file_gantry_service_v1_service_proto_enumTypes[1].Descriptor()
 }
 
-func (ResolveWriteError_Reason) Type() protoreflect.EnumType {
+func (PlanWriteError_Reason) Type() protoreflect.EnumType {
 	return &file_gantry_service_v1_service_proto_enumTypes[1]
 }
 
-func (x ResolveWriteError_Reason) Number() protoreflect.EnumNumber {
+func (x PlanWriteError_Reason) Number() protoreflect.EnumNumber {
 	return protoreflect.EnumNumber(x)
 }
 
-// Deprecated: Use ResolveWriteError_Reason.Descriptor instead.
-func (ResolveWriteError_Reason) EnumDescriptor() ([]byte, []int) {
+// Deprecated: Use PlanWriteError_Reason.Descriptor instead.
+func (PlanWriteError_Reason) EnumDescriptor() ([]byte, []int) {
 	return file_gantry_service_v1_service_proto_rawDescGZIP(), []int{7, 0}
 }
 
@@ -343,7 +344,7 @@ func (x *ListBucketsResponse) GetBuckets() []*v1.Bucket {
 	return nil
 }
 
-type ResolveWriteRequest struct {
+type PlanWriteRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Bucket        string                 `protobuf:"bytes,1,opt,name=bucket,proto3" json:"bucket,omitempty"`
 	Key           string                 `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`
@@ -352,20 +353,20 @@ type ResolveWriteRequest struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ResolveWriteRequest) Reset() {
-	*x = ResolveWriteRequest{}
+func (x *PlanWriteRequest) Reset() {
+	*x = PlanWriteRequest{}
 	mi := &file_gantry_service_v1_service_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ResolveWriteRequest) String() string {
+func (x *PlanWriteRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ResolveWriteRequest) ProtoMessage() {}
+func (*PlanWriteRequest) ProtoMessage() {}
 
-func (x *ResolveWriteRequest) ProtoReflect() protoreflect.Message {
+func (x *PlanWriteRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_gantry_service_v1_service_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -377,54 +378,53 @@ func (x *ResolveWriteRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ResolveWriteRequest.ProtoReflect.Descriptor instead.
-func (*ResolveWriteRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use PlanWriteRequest.ProtoReflect.Descriptor instead.
+func (*PlanWriteRequest) Descriptor() ([]byte, []int) {
 	return file_gantry_service_v1_service_proto_rawDescGZIP(), []int{5}
 }
 
-func (x *ResolveWriteRequest) GetBucket() string {
+func (x *PlanWriteRequest) GetBucket() string {
 	if x != nil {
 		return x.Bucket
 	}
 	return ""
 }
 
-func (x *ResolveWriteRequest) GetKey() string {
+func (x *PlanWriteRequest) GetKey() string {
 	if x != nil {
 		return x.Key
 	}
 	return ""
 }
 
-func (x *ResolveWriteRequest) GetSize() int64 {
+func (x *PlanWriteRequest) GetSize() int64 {
 	if x != nil {
 		return x.Size
 	}
 	return 0
 }
 
-type ResolveWriteResponse struct {
+type PlanWriteResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	ObjectId      string                 `protobuf:"bytes,1,opt,name=object_id,json=objectId,proto3" json:"object_id,omitempty"`
-	CradleAddress string                 `protobuf:"bytes,2,opt,name=cradle_address,json=cradleAddress,proto3" json:"cradle_address,omitempty"`
+	WritePlan     *v11.WritePlan         `protobuf:"bytes,1,opt,name=write_plan,json=writePlan,proto3" json:"write_plan,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ResolveWriteResponse) Reset() {
-	*x = ResolveWriteResponse{}
+func (x *PlanWriteResponse) Reset() {
+	*x = PlanWriteResponse{}
 	mi := &file_gantry_service_v1_service_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ResolveWriteResponse) String() string {
+func (x *PlanWriteResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ResolveWriteResponse) ProtoMessage() {}
+func (*PlanWriteResponse) ProtoMessage() {}
 
-func (x *ResolveWriteResponse) ProtoReflect() protoreflect.Message {
+func (x *PlanWriteResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_gantry_service_v1_service_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -436,48 +436,41 @@ func (x *ResolveWriteResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ResolveWriteResponse.ProtoReflect.Descriptor instead.
-func (*ResolveWriteResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use PlanWriteResponse.ProtoReflect.Descriptor instead.
+func (*PlanWriteResponse) Descriptor() ([]byte, []int) {
 	return file_gantry_service_v1_service_proto_rawDescGZIP(), []int{6}
 }
 
-func (x *ResolveWriteResponse) GetObjectId() string {
+func (x *PlanWriteResponse) GetWritePlan() *v11.WritePlan {
 	if x != nil {
-		return x.ObjectId
+		return x.WritePlan
 	}
-	return ""
+	return nil
 }
 
-func (x *ResolveWriteResponse) GetCradleAddress() string {
-	if x != nil {
-		return x.CradleAddress
-	}
-	return ""
-}
-
-// Error detail for failures in ResolveWrite
-type ResolveWriteError struct {
-	state         protoimpl.MessageState   `protogen:"open.v1"`
-	Reason        ResolveWriteError_Reason `protobuf:"varint,1,opt,name=reason,proto3,enum=gantry.service.v1.ResolveWriteError_Reason" json:"reason,omitempty"`
-	Bucket        string                   `protobuf:"bytes,2,opt,name=bucket,proto3" json:"bucket,omitempty"`
+// Error detail for failures in PlanWrite
+type PlanWriteError struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Reason        PlanWriteError_Reason  `protobuf:"varint,1,opt,name=reason,proto3,enum=gantry.service.v1.PlanWriteError_Reason" json:"reason,omitempty"`
+	Bucket        string                 `protobuf:"bytes,2,opt,name=bucket,proto3" json:"bucket,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ResolveWriteError) Reset() {
-	*x = ResolveWriteError{}
+func (x *PlanWriteError) Reset() {
+	*x = PlanWriteError{}
 	mi := &file_gantry_service_v1_service_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ResolveWriteError) String() string {
+func (x *PlanWriteError) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ResolveWriteError) ProtoMessage() {}
+func (*PlanWriteError) ProtoMessage() {}
 
-func (x *ResolveWriteError) ProtoReflect() protoreflect.Message {
+func (x *PlanWriteError) ProtoReflect() protoreflect.Message {
 	mi := &file_gantry_service_v1_service_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -489,19 +482,19 @@ func (x *ResolveWriteError) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ResolveWriteError.ProtoReflect.Descriptor instead.
-func (*ResolveWriteError) Descriptor() ([]byte, []int) {
+// Deprecated: Use PlanWriteError.ProtoReflect.Descriptor instead.
+func (*PlanWriteError) Descriptor() ([]byte, []int) {
 	return file_gantry_service_v1_service_proto_rawDescGZIP(), []int{7}
 }
 
-func (x *ResolveWriteError) GetReason() ResolveWriteError_Reason {
+func (x *PlanWriteError) GetReason() PlanWriteError_Reason {
 	if x != nil {
 		return x.Reason
 	}
-	return ResolveWriteError_REASON_UNSPECIFIED
+	return PlanWriteError_REASON_UNSPECIFIED
 }
 
-func (x *ResolveWriteError) GetBucket() string {
+func (x *PlanWriteError) GetBucket() string {
 	if x != nil {
 		return x.Bucket
 	}
@@ -512,7 +505,7 @@ var File_gantry_service_v1_service_proto protoreflect.FileDescriptor
 
 const file_gantry_service_v1_service_proto_rawDesc = "" +
 	"\n" +
-	"\x1fgantry/service/v1/service.proto\x12\x11gantry.service.v1\x1a\x1dgantry/bucket/v1/bucket.proto\")\n" +
+	"\x1fgantry/service/v1/service.proto\x12\x11gantry.service.v1\x1a\x1dgantry/bucket/v1/bucket.proto\x1a%gantry/write_plan/v1/write_plan.proto\")\n" +
 	"\x13CreateBucketRequest\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\"H\n" +
 	"\x14CreateBucketResponse\x120\n" +
@@ -526,26 +519,26 @@ const file_gantry_service_v1_service_proto_rawDesc = "" +
 	"\x1cREASON_BUCKET_ALREADY_EXISTS\x10\x02\"\x14\n" +
 	"\x12ListBucketsRequest\"I\n" +
 	"\x13ListBucketsResponse\x122\n" +
-	"\abuckets\x18\x01 \x03(\v2\x18.gantry.bucket.v1.BucketR\abuckets\"S\n" +
-	"\x13ResolveWriteRequest\x12\x16\n" +
+	"\abuckets\x18\x01 \x03(\v2\x18.gantry.bucket.v1.BucketR\abuckets\"P\n" +
+	"\x10PlanWriteRequest\x12\x16\n" +
 	"\x06bucket\x18\x01 \x01(\tR\x06bucket\x12\x10\n" +
 	"\x03key\x18\x02 \x01(\tR\x03key\x12\x12\n" +
-	"\x04size\x18\x03 \x01(\x03R\x04size\"Z\n" +
-	"\x14ResolveWriteResponse\x12\x1b\n" +
-	"\tobject_id\x18\x01 \x01(\tR\bobjectId\x12%\n" +
-	"\x0ecradle_address\x18\x02 \x01(\tR\rcradleAddress\"\xee\x01\n" +
-	"\x11ResolveWriteError\x12C\n" +
-	"\x06reason\x18\x01 \x01(\x0e2+.gantry.service.v1.ResolveWriteError.ReasonR\x06reason\x12\x16\n" +
+	"\x04size\x18\x03 \x01(\x03R\x04size\"S\n" +
+	"\x11PlanWriteResponse\x12>\n" +
+	"\n" +
+	"write_plan\x18\x01 \x01(\v2\x1f.gantry.write_plan.v1.WritePlanR\twritePlan\"\xe8\x01\n" +
+	"\x0ePlanWriteError\x12@\n" +
+	"\x06reason\x18\x01 \x01(\x0e2(.gantry.service.v1.PlanWriteError.ReasonR\x06reason\x12\x16\n" +
 	"\x06bucket\x18\x02 \x01(\tR\x06bucket\"|\n" +
 	"\x06Reason\x12\x16\n" +
 	"\x12REASON_UNSPECIFIED\x10\x00\x12\x1b\n" +
 	"\x17REASON_BUCKET_NOT_FOUND\x10\x01\x12\x1f\n" +
 	"\x1bREASON_BUCKET_ACCESS_DENIED\x10\x02\x12\x1c\n" +
-	"\x18REASON_NO_CRADLE_SERVERS\x10\x032\xaf\x02\n" +
+	"\x18REASON_NO_CRADLE_SERVERS\x10\x032\xa6\x02\n" +
 	"\rGantryService\x12_\n" +
 	"\fCreateBucket\x12&.gantry.service.v1.CreateBucketRequest\x1a'.gantry.service.v1.CreateBucketResponse\x12\\\n" +
-	"\vListBuckets\x12%.gantry.service.v1.ListBucketsRequest\x1a&.gantry.service.v1.ListBucketsResponse\x12_\n" +
-	"\fResolveWrite\x12&.gantry.service.v1.ResolveWriteRequest\x1a'.gantry.service.v1.ResolveWriteResponseB\xd2\x01\n" +
+	"\vListBuckets\x12%.gantry.service.v1.ListBucketsRequest\x1a&.gantry.service.v1.ListBucketsResponse\x12V\n" +
+	"\tPlanWrite\x12#.gantry.service.v1.PlanWriteRequest\x1a$.gantry.service.v1.PlanWriteResponseB\xd2\x01\n" +
 	"\x15com.gantry.service.v1B\fServiceProtoP\x01ZEgithub.com/ratdaddy/blockcloset/proto/gen/gantry/service/v1;servicev1\xa2\x02\x03GSX\xaa\x02\x11Gantry.Service.V1\xca\x02\x11Gantry\\Service\\V1\xe2\x02\x1dGantry\\Service\\V1\\GPBMetadata\xea\x02\x13Gantry::Service::V1b\x06proto3"
 
 var (
@@ -564,33 +557,35 @@ var file_gantry_service_v1_service_proto_enumTypes = make([]protoimpl.EnumInfo, 
 var file_gantry_service_v1_service_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_gantry_service_v1_service_proto_goTypes = []any{
 	(BucketOwnershipConflict_Reason)(0), // 0: gantry.service.v1.BucketOwnershipConflict.Reason
-	(ResolveWriteError_Reason)(0),       // 1: gantry.service.v1.ResolveWriteError.Reason
+	(PlanWriteError_Reason)(0),          // 1: gantry.service.v1.PlanWriteError.Reason
 	(*CreateBucketRequest)(nil),         // 2: gantry.service.v1.CreateBucketRequest
 	(*CreateBucketResponse)(nil),        // 3: gantry.service.v1.CreateBucketResponse
 	(*BucketOwnershipConflict)(nil),     // 4: gantry.service.v1.BucketOwnershipConflict
 	(*ListBucketsRequest)(nil),          // 5: gantry.service.v1.ListBucketsRequest
 	(*ListBucketsResponse)(nil),         // 6: gantry.service.v1.ListBucketsResponse
-	(*ResolveWriteRequest)(nil),         // 7: gantry.service.v1.ResolveWriteRequest
-	(*ResolveWriteResponse)(nil),        // 8: gantry.service.v1.ResolveWriteResponse
-	(*ResolveWriteError)(nil),           // 9: gantry.service.v1.ResolveWriteError
+	(*PlanWriteRequest)(nil),            // 7: gantry.service.v1.PlanWriteRequest
+	(*PlanWriteResponse)(nil),           // 8: gantry.service.v1.PlanWriteResponse
+	(*PlanWriteError)(nil),              // 9: gantry.service.v1.PlanWriteError
 	(*v1.Bucket)(nil),                   // 10: gantry.bucket.v1.Bucket
+	(*v11.WritePlan)(nil),               // 11: gantry.write_plan.v1.WritePlan
 }
 var file_gantry_service_v1_service_proto_depIdxs = []int32{
 	10, // 0: gantry.service.v1.CreateBucketResponse.bucket:type_name -> gantry.bucket.v1.Bucket
 	0,  // 1: gantry.service.v1.BucketOwnershipConflict.reason:type_name -> gantry.service.v1.BucketOwnershipConflict.Reason
 	10, // 2: gantry.service.v1.ListBucketsResponse.buckets:type_name -> gantry.bucket.v1.Bucket
-	1,  // 3: gantry.service.v1.ResolveWriteError.reason:type_name -> gantry.service.v1.ResolveWriteError.Reason
-	2,  // 4: gantry.service.v1.GantryService.CreateBucket:input_type -> gantry.service.v1.CreateBucketRequest
-	5,  // 5: gantry.service.v1.GantryService.ListBuckets:input_type -> gantry.service.v1.ListBucketsRequest
-	7,  // 6: gantry.service.v1.GantryService.ResolveWrite:input_type -> gantry.service.v1.ResolveWriteRequest
-	3,  // 7: gantry.service.v1.GantryService.CreateBucket:output_type -> gantry.service.v1.CreateBucketResponse
-	6,  // 8: gantry.service.v1.GantryService.ListBuckets:output_type -> gantry.service.v1.ListBucketsResponse
-	8,  // 9: gantry.service.v1.GantryService.ResolveWrite:output_type -> gantry.service.v1.ResolveWriteResponse
-	7,  // [7:10] is the sub-list for method output_type
-	4,  // [4:7] is the sub-list for method input_type
-	4,  // [4:4] is the sub-list for extension type_name
-	4,  // [4:4] is the sub-list for extension extendee
-	0,  // [0:4] is the sub-list for field type_name
+	11, // 3: gantry.service.v1.PlanWriteResponse.write_plan:type_name -> gantry.write_plan.v1.WritePlan
+	1,  // 4: gantry.service.v1.PlanWriteError.reason:type_name -> gantry.service.v1.PlanWriteError.Reason
+	2,  // 5: gantry.service.v1.GantryService.CreateBucket:input_type -> gantry.service.v1.CreateBucketRequest
+	5,  // 6: gantry.service.v1.GantryService.ListBuckets:input_type -> gantry.service.v1.ListBucketsRequest
+	7,  // 7: gantry.service.v1.GantryService.PlanWrite:input_type -> gantry.service.v1.PlanWriteRequest
+	3,  // 8: gantry.service.v1.GantryService.CreateBucket:output_type -> gantry.service.v1.CreateBucketResponse
+	6,  // 9: gantry.service.v1.GantryService.ListBuckets:output_type -> gantry.service.v1.ListBucketsResponse
+	8,  // 10: gantry.service.v1.GantryService.PlanWrite:output_type -> gantry.service.v1.PlanWriteResponse
+	8,  // [8:11] is the sub-list for method output_type
+	5,  // [5:8] is the sub-list for method input_type
+	5,  // [5:5] is the sub-list for extension type_name
+	5,  // [5:5] is the sub-list for extension extendee
+	0,  // [0:5] is the sub-list for field type_name
 }
 
 func init() { file_gantry_service_v1_service_proto_init() }

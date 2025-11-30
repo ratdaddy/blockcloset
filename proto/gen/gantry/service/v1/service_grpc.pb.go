@@ -21,7 +21,7 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	GantryService_CreateBucket_FullMethodName = "/gantry.service.v1.GantryService/CreateBucket"
 	GantryService_ListBuckets_FullMethodName  = "/gantry.service.v1.GantryService/ListBuckets"
-	GantryService_ResolveWrite_FullMethodName = "/gantry.service.v1.GantryService/ResolveWrite"
+	GantryService_PlanWrite_FullMethodName    = "/gantry.service.v1.GantryService/PlanWrite"
 )
 
 // GantryServiceClient is the client API for GantryService service.
@@ -30,7 +30,7 @@ const (
 type GantryServiceClient interface {
 	CreateBucket(ctx context.Context, in *CreateBucketRequest, opts ...grpc.CallOption) (*CreateBucketResponse, error)
 	ListBuckets(ctx context.Context, in *ListBucketsRequest, opts ...grpc.CallOption) (*ListBucketsResponse, error)
-	ResolveWrite(ctx context.Context, in *ResolveWriteRequest, opts ...grpc.CallOption) (*ResolveWriteResponse, error)
+	PlanWrite(ctx context.Context, in *PlanWriteRequest, opts ...grpc.CallOption) (*PlanWriteResponse, error)
 }
 
 type gantryServiceClient struct {
@@ -61,10 +61,10 @@ func (c *gantryServiceClient) ListBuckets(ctx context.Context, in *ListBucketsRe
 	return out, nil
 }
 
-func (c *gantryServiceClient) ResolveWrite(ctx context.Context, in *ResolveWriteRequest, opts ...grpc.CallOption) (*ResolveWriteResponse, error) {
+func (c *gantryServiceClient) PlanWrite(ctx context.Context, in *PlanWriteRequest, opts ...grpc.CallOption) (*PlanWriteResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ResolveWriteResponse)
-	err := c.cc.Invoke(ctx, GantryService_ResolveWrite_FullMethodName, in, out, cOpts...)
+	out := new(PlanWriteResponse)
+	err := c.cc.Invoke(ctx, GantryService_PlanWrite_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +77,7 @@ func (c *gantryServiceClient) ResolveWrite(ctx context.Context, in *ResolveWrite
 type GantryServiceServer interface {
 	CreateBucket(context.Context, *CreateBucketRequest) (*CreateBucketResponse, error)
 	ListBuckets(context.Context, *ListBucketsRequest) (*ListBucketsResponse, error)
-	ResolveWrite(context.Context, *ResolveWriteRequest) (*ResolveWriteResponse, error)
+	PlanWrite(context.Context, *PlanWriteRequest) (*PlanWriteResponse, error)
 	mustEmbedUnimplementedGantryServiceServer()
 }
 
@@ -94,8 +94,8 @@ func (UnimplementedGantryServiceServer) CreateBucket(context.Context, *CreateBuc
 func (UnimplementedGantryServiceServer) ListBuckets(context.Context, *ListBucketsRequest) (*ListBucketsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListBuckets not implemented")
 }
-func (UnimplementedGantryServiceServer) ResolveWrite(context.Context, *ResolveWriteRequest) (*ResolveWriteResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ResolveWrite not implemented")
+func (UnimplementedGantryServiceServer) PlanWrite(context.Context, *PlanWriteRequest) (*PlanWriteResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PlanWrite not implemented")
 }
 func (UnimplementedGantryServiceServer) mustEmbedUnimplementedGantryServiceServer() {}
 func (UnimplementedGantryServiceServer) testEmbeddedByValue()                       {}
@@ -154,20 +154,20 @@ func _GantryService_ListBuckets_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
-func _GantryService_ResolveWrite_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ResolveWriteRequest)
+func _GantryService_PlanWrite_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PlanWriteRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(GantryServiceServer).ResolveWrite(ctx, in)
+		return srv.(GantryServiceServer).PlanWrite(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: GantryService_ResolveWrite_FullMethodName,
+		FullMethod: GantryService_PlanWrite_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GantryServiceServer).ResolveWrite(ctx, req.(*ResolveWriteRequest))
+		return srv.(GantryServiceServer).PlanWrite(ctx, req.(*PlanWriteRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -188,8 +188,8 @@ var GantryService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _GantryService_ListBuckets_Handler,
 		},
 		{
-			MethodName: "ResolveWrite",
-			Handler:    _GantryService_ResolveWrite_Handler,
+			MethodName: "PlanWrite",
+			Handler:    _GantryService_PlanWrite_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

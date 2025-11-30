@@ -4,11 +4,12 @@ package gantry.service.v1;
 option go_package = "github.com/ratdaddy/blockcloset/proto/gen/go/gantry/service/v1;servicev1";
 
 import "gantry/bucket/v1/bucket.proto";
+import "gantry/write_plan/v1/write_plan.proto";
 
 service GantryService {
   rpc CreateBucket(CreateBucketRequest) returns (CreateBucketResponse);
   rpc ListBuckets(ListBucketsRequest) returns (ListBucketsResponse);
-  rpc ResolveWrite(ResolveWriteRequest) returns (ResolveWriteResponse);
+  rpc PlanWrite(PlanWriteRequest) returns (PlanWriteResponse);
 }
 
 message CreateBucketRequest {
@@ -36,19 +37,18 @@ message ListBucketsResponse {
   repeated gantry.bucket.v1.Bucket buckets = 1;
 }
 
-message ResolveWriteRequest {
+message PlanWriteRequest {
   string bucket = 1;
   string key = 2;
   int64 size = 3;
 }
 
-message ResolveWriteResponse {
-  string object_id = 1;
-  string cradle_address = 2;
+message PlanWriteResponse {
+  gantry.write_plan.v1.WritePlan write_plan = 1;
 }
 
-// Error detail for failures in ResolveWrite
-message ResolveWriteError {
+// Error detail for failures in PlanWrite
+message PlanWriteError {
   enum Reason {
     REASON_UNSPECIFIED = 0;
     REASON_BUCKET_NOT_FOUND = 1;

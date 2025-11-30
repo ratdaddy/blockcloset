@@ -13,11 +13,12 @@ import (
 	"github.com/ratdaddy/blockcloset/loggrpc"
 	"github.com/ratdaddy/blockcloset/pkg/validation"
 	servicev1 "github.com/ratdaddy/blockcloset/proto/gen/gantry/service/v1"
+	writeplanv1 "github.com/ratdaddy/blockcloset/proto/gen/gantry/write_plan/v1"
 )
 
 const maxPutBytes = 5 * 1024 * 1024 * 1024 // 5 GiB
 
-func (s *Service) ResolveWrite(ctx context.Context, req *servicev1.ResolveWriteRequest) (*servicev1.ResolveWriteResponse, error) {
+func (s *Service) PlanWrite(ctx context.Context, req *servicev1.PlanWriteRequest) (*servicev1.PlanWriteResponse, error) {
 	bucketName := req.GetBucket()
 	key := req.GetKey()
 	size := req.GetSize()
@@ -52,8 +53,8 @@ func (s *Service) ResolveWrite(ctx context.Context, req *servicev1.ResolveWriteR
 
 	bucket, err := buckets.GetByName(ctx, bucketName)
 	if err != nil {
-		detail := &servicev1.ResolveWriteError{
-			Reason: servicev1.ResolveWriteError_REASON_BUCKET_NOT_FOUND,
+		detail := &servicev1.PlanWriteError{
+			Reason: servicev1.PlanWriteError_REASON_BUCKET_NOT_FOUND,
 			Bucket: bucketName,
 		}
 		st := status.New(codes.NotFound, err.Error())
@@ -67,8 +68,8 @@ func (s *Service) ResolveWrite(ctx context.Context, req *servicev1.ResolveWriteR
 	cradle_servers := s.store.CradleServers()
 	server, err := cradle_servers.SelectForUpload(ctx)
 	if err != nil {
-		detail := &servicev1.ResolveWriteError{
-			Reason: servicev1.ResolveWriteError_REASON_NO_CRADLE_SERVERS,
+		detail := &servicev1.PlanWriteError{
+			Reason: servicev1.PlanWriteError_REASON_NO_CRADLE_SERVERS,
 			Bucket: bucketName,
 		}
 		st := status.New(codes.FailedPrecondition, err.Error())
@@ -86,14 +87,18 @@ func (s *Service) ResolveWrite(ctx context.Context, req *servicev1.ResolveWriteR
 		return nil, loggrpc.SetError(ctx, status.Error(codes.Internal, err.Error()))
 	}
 
-	resp := &servicev1.ResolveWriteResponse{
+	writePlan := &writeplanv1.WritePlan{
 		ObjectId:      objectID,
 		CradleAddress: server.Address,
 	}
 
+	resp := &servicev1.PlanWriteResponse{
+		WritePlan: writePlan,
+	}
+
 	loggrpc.SetAttrs(ctx,
 		slog.String("result", fmt.Sprintf("object %s/%s (%d bytes) created, write to %s",
-			bucketName, key, size, resp.CradleAddress)))
+			bucketName, key, size, writePlan.CradleAddress)))
 
 	return resp, nil
 }

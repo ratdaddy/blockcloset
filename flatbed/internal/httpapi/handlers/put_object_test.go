@@ -15,11 +15,12 @@ import (
 	"github.com/ratdaddy/blockcloset/flatbed/internal/testutil"
 	"github.com/ratdaddy/blockcloset/pkg/validation"
 	servicev1 "github.com/ratdaddy/blockcloset/proto/gen/gantry/service/v1"
+	writeplanv1 "github.com/ratdaddy/blockcloset/proto/gen/gantry/write_plan/v1"
 )
 
-func resolveWriteErr(code codes.Code, message string, reason servicev1.ResolveWriteError_Reason, bucket string) error {
+func planWriteErr(code codes.Code, message string, reason servicev1.PlanWriteError_Reason, bucket string) error {
 	st := status.New(code, message)
-	detail := &servicev1.ResolveWriteError{
+	detail := &servicev1.PlanWriteError{
 		Reason: reason,
 		Bucket: bucket,
 	}
@@ -50,7 +51,7 @@ func TestPutObject_ValidationGantryAndResponse(t *testing.T) {
 
 	cases := []tc{
 		{
-			name:          "valid bucket and key -> 200 and ResolveWrite call",
+			name:          "valid bucket and key -> 200 and PlanWrite call",
 			bucket:        "my-bucket",
 			key:           "my-key",
 			contentLength: "1024",
@@ -120,10 +121,10 @@ func TestPutObject_ValidationGantryAndResponse(t *testing.T) {
 			bucket:        "nonexistent-bucket",
 			key:           "my-key",
 			contentLength: "1024",
-			gantryErr: resolveWriteErr(
+			gantryErr: planWriteErr(
 				codes.NotFound,
 				"bucket not found",
-				servicev1.ResolveWriteError_REASON_BUCKET_NOT_FOUND,
+				servicev1.PlanWriteError_REASON_BUCKET_NOT_FOUND,
 				"nonexistent-bucket",
 			),
 			wantStatus:     http.StatusNotFound,
@@ -138,10 +139,10 @@ func TestPutObject_ValidationGantryAndResponse(t *testing.T) {
 			bucket:        "forbidden-bucket",
 			key:           "my-key",
 			contentLength: "1024",
-			gantryErr: resolveWriteErr(
+			gantryErr: planWriteErr(
 				codes.PermissionDenied,
 				"access denied",
-				servicev1.ResolveWriteError_REASON_BUCKET_ACCESS_DENIED,
+				servicev1.PlanWriteError_REASON_BUCKET_ACCESS_DENIED,
 				"forbidden-bucket",
 			),
 			wantStatus:     http.StatusForbidden,
@@ -156,10 +157,10 @@ func TestPutObject_ValidationGantryAndResponse(t *testing.T) {
 			bucket:        "my-bucket",
 			key:           "my-key",
 			contentLength: "1024",
-			gantryErr: resolveWriteErr(
+			gantryErr: planWriteErr(
 				codes.FailedPrecondition,
 				"no cradle servers available",
-				servicev1.ResolveWriteError_REASON_NO_CRADLE_SERVERS,
+				servicev1.PlanWriteError_REASON_NO_CRADLE_SERVERS,
 				"my-bucket",
 			),
 			wantStatus:     http.StatusServiceUnavailable,
@@ -188,8 +189,8 @@ func TestPutObject_ValidationGantryAndResponse(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			stub := testutil.NewGantryStub()
 			if c.gantryErr != nil {
-				stub.ResolveWriteFn = func(context.Context, string, string, int64) (string, string, error) {
-					return "", "", c.gantryErr
+				stub.PlanWriteFn = func(context.Context, string, string, int64) (*writeplanv1.WritePlan, error) {
+					return nil, c.gantryErr
 				}
 			}
 			h := &handlers.Handlers{
@@ -216,23 +217,23 @@ func TestPutObject_ValidationGantryAndResponse(t *testing.T) {
 				t.Fatalf("status: got %d, want %d", rec.Code, c.wantStatus)
 			}
 
-			if got := stub.ResolveWriteCount(); got != c.wantResolves {
-				t.Fatalf("ResolveWrite calls: got %d, want %d", got, c.wantResolves)
+			if got := stub.PlanWriteCount(); got != c.wantResolves {
+				t.Fatalf("PlanWrite calls: got %d, want %d", got, c.wantResolves)
 			}
 
 			if c.wantResolves > 0 {
-				if len(stub.ResolveWriteCalls) == 0 {
-					t.Fatalf("expected ResolveWrite call, got none")
+				if len(stub.PlanWriteCalls) == 0 {
+					t.Fatalf("expected PlanWrite call, got none")
 				}
-				call := stub.ResolveWriteCalls[0]
+				call := stub.PlanWriteCalls[0]
 				if call.Bucket != c.wantBucket {
-					t.Fatalf("ResolveWrite bucket: got %q, want %q", call.Bucket, c.wantBucket)
+					t.Fatalf("PlanWrite bucket: got %q, want %q", call.Bucket, c.wantBucket)
 				}
 				if call.Key != c.wantKey {
-					t.Fatalf("ResolveWrite key: got %q, want %q", call.Key, c.wantKey)
+					t.Fatalf("PlanWrite key: got %q, want %q", call.Key, c.wantKey)
 				}
 				if call.Size != c.wantSize {
-					t.Fatalf("ResolveWrite size: got %d, want %d", call.Size, c.wantSize)
+					t.Fatalf("PlanWrite size: got %d, want %d", call.Size, c.wantSize)
 				}
 			}
 

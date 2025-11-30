@@ -28,9 +28,9 @@ func checkTestBucket(bucket string) error {
 		return withDetail.Err()
 
 	case "forbidden":
-		// For ResolveWrite: access denied to bucket
-		detail := &servicev1.ResolveWriteError{
-			Reason: servicev1.ResolveWriteError_REASON_BUCKET_ACCESS_DENIED,
+		// For PlanWrite: access denied to bucket
+		detail := &servicev1.PlanWriteError{
+			Reason: servicev1.PlanWriteError_REASON_BUCKET_ACCESS_DENIED,
 			Bucket: bucket,
 		}
 		st := status.New(codes.PermissionDenied, "access denied")
@@ -38,8 +38,8 @@ func checkTestBucket(bucket string) error {
 		return withDetail.Err()
 
 	case "no-cradles":
-		detail := &servicev1.ResolveWriteError{
-			Reason: servicev1.ResolveWriteError_REASON_NO_CRADLE_SERVERS,
+		detail := &servicev1.PlanWriteError{
+			Reason: servicev1.PlanWriteError_REASON_NO_CRADLE_SERVERS,
 			Bucket: bucket,
 		}
 		st := status.New(codes.FailedPrecondition, "no cradle servers available")

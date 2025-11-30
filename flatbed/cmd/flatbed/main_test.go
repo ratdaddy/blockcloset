@@ -62,7 +62,7 @@ func TestMain_WiresAddressAndHandler(t *testing.T) {
 			headers:    map[string]string{"Content-Length": "1024"},
 			wantStatus: http.StatusOK,
 			callName:   "gantry resolve write",
-			callCount:  (*testutil.GantryStub).ResolveWriteCount,
+			callCount:  (*testutil.GantryStub).PlanWriteCount,
 		},
 	}
 
@@ -89,7 +89,7 @@ func TestMain_WiresAddressAndHandler(t *testing.T) {
 			// reset for next iteration
 			fg.CreateCalls = nil
 			fg.ListCalls = 0
-			fg.ResolveWriteCalls = nil
+			fg.PlanWriteCalls = nil
 			fg.CreateFn = nil
 			fg.ListFn = nil
 		}

@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package gantry.write_plan.v1;
+
+message WritePlan {
+  string object_id = 1;
+  string cradle_address = 2;
+  reserved 3 to 10;  // Future: replica addresses, expiration, etc.
+}

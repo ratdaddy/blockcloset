@@ -56,7 +56,7 @@ func (h *Handlers) PutObject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	objectID, cradleAddress, err := h.Gantry.ResolveWrite(r.Context(), bucket, key, contentLength)
+	writePlan, err := h.Gantry.PlanWrite(r.Context(), bucket, key, contentLength)
 	if err != nil {
 		st, ok := status.FromError(err)
 		if !ok {
@@ -79,8 +79,8 @@ func (h *Handlers) PutObject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO(Phase 2): Stream request body to Cradle using objectID and cradleAddress
-	logger.LogWritePlan(r, objectID, cradleAddress, contentLength)
+	// TODO(Phase 2): Stream request body to Cradle using writePlan
+	logger.LogWritePlan(r, writePlan.GetObjectId(), writePlan.GetCradleAddress(), contentLength)
 
 	w.WriteHeader(http.StatusOK)
 }

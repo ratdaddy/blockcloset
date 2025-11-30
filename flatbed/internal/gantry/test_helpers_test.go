@@ -13,6 +13,7 @@ import (
 
 	bucketv1 "github.com/ratdaddy/blockcloset/proto/gen/gantry/bucket/v1"
 	servicev1 "github.com/ratdaddy/blockcloset/proto/gen/gantry/service/v1"
+	writeplanv1 "github.com/ratdaddy/blockcloset/proto/gen/gantry/write_plan/v1"
 )
 
 const testBufConnSize = 1024 * 1024
@@ -27,9 +28,9 @@ type listBucketsCall struct {
 	Request  *servicev1.ListBucketsRequest
 }
 
-type resolveWriteCall struct {
+type planWriteCall struct {
 	Metadata metadata.MD
-	Request  *servicev1.ResolveWriteRequest
+	Request  *servicev1.PlanWriteRequest
 }
 
 type captureGantryService struct {
@@ -40,8 +41,8 @@ type captureGantryService struct {
 	createBucketHookFn func(context.Context, *servicev1.CreateBucketRequest) (*servicev1.CreateBucketResponse, error)
 	listBucketCalls    []listBucketsCall
 	listBucketHookFn   func(context.Context, *servicev1.ListBucketsRequest) (*servicev1.ListBucketsResponse, error)
-	resolveWriteCalls  []resolveWriteCall
-	resolveWriteHookFn func(context.Context, *servicev1.ResolveWriteRequest) (*servicev1.ResolveWriteResponse, error)
+	planWriteCalls     []planWriteCall
+	planWriteHookFn    func(context.Context, *servicev1.PlanWriteRequest) (*servicev1.PlanWriteResponse, error)
 }
 
 func newCaptureGantryService() *captureGantryService {
@@ -52,7 +53,7 @@ func (s *captureGantryService) Reset() {
 	s.mu.Lock()
 	s.createBucketCalls = nil
 	s.listBucketCalls = nil
-	s.resolveWriteCalls = nil
+	s.planWriteCalls = nil
 	s.mu.Unlock()
 }
 
@@ -145,9 +146,9 @@ func (s *captureGantryService) SetListBucketsHook(fn func(context.Context, *serv
 	s.mu.Unlock()
 }
 
-func (s *captureGantryService) ResolveWrite(ctx context.Context, req *servicev1.ResolveWriteRequest) (*servicev1.ResolveWriteResponse, error) {
-	call := resolveWriteCall{
-		Request: proto.Clone(req).(*servicev1.ResolveWriteRequest),
+func (s *captureGantryService) PlanWrite(ctx context.Context, req *servicev1.PlanWriteRequest) (*servicev1.PlanWriteResponse, error) {
+	call := planWriteCall{
+		Request: proto.Clone(req).(*servicev1.PlanWriteRequest),
 	}
 
 	if md, ok := metadata.FromIncomingContext(ctx); ok {
@@ -155,41 +156,43 @@ func (s *captureGantryService) ResolveWrite(ctx context.Context, req *servicev1.
 	}
 
 	s.mu.Lock()
-	s.resolveWriteCalls = append(s.resolveWriteCalls, call)
-	hook := s.resolveWriteHookFn
+	s.planWriteCalls = append(s.planWriteCalls, call)
+	hook := s.planWriteHookFn
 	s.mu.Unlock()
 
 	if hook != nil {
 		return hook(ctx, req)
 	}
 
-	return &servicev1.ResolveWriteResponse{
-		ObjectId:      "test-object-id",
-		CradleAddress: "localhost:9002",
+	return &servicev1.PlanWriteResponse{
+		WritePlan: &writeplanv1.WritePlan{
+			ObjectId:      "test-object-id",
+			CradleAddress: "localhost:9002",
+		},
 	}, nil
 }
 
-func (s *captureGantryService) ResolveWriteCalls() []resolveWriteCall {
+func (s *captureGantryService) PlanWriteCalls() []planWriteCall {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	calls := make([]resolveWriteCall, len(s.resolveWriteCalls))
-	copy(calls, s.resolveWriteCalls)
+	calls := make([]planWriteCall, len(s.planWriteCalls))
+	copy(calls, s.planWriteCalls)
 	return calls
 }
 
-func (s *captureGantryService) LastResolveWriteCall() (resolveWriteCall, bool) {
+func (s *captureGantryService) LastPlanWriteCall() (planWriteCall, bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if len(s.resolveWriteCalls) == 0 {
-		return resolveWriteCall{}, false
+	if len(s.planWriteCalls) == 0 {
+		return planWriteCall{}, false
 	}
-	return s.resolveWriteCalls[len(s.resolveWriteCalls)-1], true
+	return s.planWriteCalls[len(s.planWriteCalls)-1], true
 }
 
-func (s *captureGantryService) SetResolveWriteHook(fn func(context.Context, *servicev1.ResolveWriteRequest) (*servicev1.ResolveWriteResponse, error)) {
+func (s *captureGantryService) SetPlanWriteHook(fn func(context.Context, *servicev1.PlanWriteRequest) (*servicev1.PlanWriteResponse, error)) {
 	s.mu.Lock()
-	s.resolveWriteHookFn = fn
+	s.planWriteHookFn = fn
 	s.mu.Unlock()
 }
 
