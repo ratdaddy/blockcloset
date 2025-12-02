@@ -30,6 +30,7 @@ func TestService_PlanWrite(t *testing.T) {
 		objectCreateErr       error
 		wantErr               bool
 		wantCode              codes.Code
+		wantMessage           string
 		wantErrorDetail       bool
 		wantErrorReason       servicev1.PlanWriteError_Reason
 		wantObjectID          bool
@@ -62,6 +63,7 @@ func TestService_PlanWrite(t *testing.T) {
 			getByNameErr:        store.ErrBucketNotFound,
 			wantErr:             true,
 			wantCode:            codes.NotFound,
+			wantMessage:         "bucket not found",
 			wantErrorDetail:     true,
 			wantErrorReason:     servicev1.PlanWriteError_REASON_BUCKET_NOT_FOUND,
 			expectGetByNameCall: true,
@@ -74,6 +76,7 @@ func TestService_PlanWrite(t *testing.T) {
 			selectForUploadErr:    store.ErrNoCradleServersAvailable,
 			wantErr:               true,
 			wantCode:              codes.FailedPrecondition,
+			wantMessage:           "no cradle servers available",
 			wantErrorDetail:       true,
 			wantErrorReason:       servicev1.PlanWriteError_REASON_NO_CRADLE_SERVERS,
 			expectGetByNameCall:   true,
@@ -90,41 +93,46 @@ func TestService_PlanWrite(t *testing.T) {
 			objectCreateErr:       errors.New("object store error"),
 			wantErr:               true,
 			wantCode:              codes.Internal,
+			wantMessage:           "object store error",
 			expectGetByNameCall:   true,
 			expectSelectForUpload: true,
 			expectObjectCreate:    true,
 		},
 		{
-			name:     "invalid bucket name returns InvalidArgument",
-			bucket:   "Bad!Name",
-			key:      "my-key.txt",
-			size:     1024,
-			wantErr:  true,
-			wantCode: codes.InvalidArgument,
+			name:        "invalid bucket name returns InvalidArgument",
+			bucket:      "Bad!Name",
+			key:         "my-key.txt",
+			size:        1024,
+			wantErr:     true,
+			wantCode:    codes.InvalidArgument,
+			wantMessage: "InvalidBucketName",
 		},
 		{
-			name:     "invalid key returns InvalidArgument",
-			bucket:   "my-bucket",
-			key:      "",
-			size:     1024,
-			wantErr:  true,
-			wantCode: codes.InvalidArgument,
+			name:        "invalid key returns InvalidArgument",
+			bucket:      "my-bucket",
+			key:         "",
+			size:        1024,
+			wantErr:     true,
+			wantCode:    codes.InvalidArgument,
+			wantMessage: "InvalidKeyName",
 		},
 		{
-			name:     "zero size returns InvalidArgument",
-			bucket:   "my-bucket",
-			key:      "my-key.txt",
-			size:     0,
-			wantErr:  true,
-			wantCode: codes.InvalidArgument,
+			name:        "zero size returns InvalidArgument",
+			bucket:      "my-bucket",
+			key:         "my-key.txt",
+			size:        0,
+			wantErr:     true,
+			wantCode:    codes.InvalidArgument,
+			wantMessage: "InvalidArgument",
 		},
 		{
-			name:     "size exceeds max returns InvalidArgument",
-			bucket:   "my-bucket",
-			key:      "my-key.txt",
-			size:     5*1024*1024*1024 + 1, // 5GB + 1 byte
-			wantErr:  true,
-			wantCode: codes.InvalidArgument,
+			name:        "size exceeds max returns InvalidArgument",
+			bucket:      "my-bucket",
+			key:         "my-key.txt",
+			size:        5*1024*1024*1024 + 1, // 5GB + 1 byte
+			wantErr:     true,
+			wantCode:    codes.InvalidArgument,
+			wantMessage: "EntityTooLarge",
 		},
 	}
 
@@ -184,7 +192,7 @@ func TestService_PlanWrite(t *testing.T) {
 			}
 
 			if c.wantErr {
-				assertPlanWriteError(t, err, c.wantCode)
+				assertGRPCError(t, err, c.wantCode, c.wantMessage)
 				if c.wantErrorDetail {
 					assertPlanWriteErrorDetail(t, err, c.wantErrorReason, c.bucket)
 				}
@@ -245,23 +253,6 @@ func TestService_PlanWrite(t *testing.T) {
 				}
 			}
 		})
-	}
-}
-
-func assertPlanWriteError(t *testing.T, err error, wantCode codes.Code) {
-	t.Helper()
-
-	if err == nil {
-		t.Fatal("expected error, got nil")
-	}
-
-	st, ok := status.FromError(err)
-	if !ok {
-		t.Fatalf("expected gRPC status error, got %v", err)
-	}
-
-	if st.Code() != wantCode {
-		t.Fatalf("status code: got %v, want %v", st.Code(), wantCode)
 	}
 }
 

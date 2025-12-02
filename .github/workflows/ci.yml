@@ -3,9 +3,9 @@ name: ci
 on:
   push:
     branches: [ main ]
-    paths: [ "flatbed/**", "gantry/**", "proto/**", "loggrpc/**", "pkg/**", ".github/workflows/ci.yml" ]
+    paths: [ "flatbed/**", "gantry/**", "cradle/**", "proto/**", "loggrpc/**", "pkg/**", ".github/workflows/ci.yml" ]
   pull_request:
-    paths: [ "flatbed/**", "gantry/**", "proto/**", "loggrpc/**", "pkg/**", ".github/workflows/ci.yml" ]
+    paths: [ "flatbed/**", "gantry/**", "cradle/**", "proto/**", "loggrpc/**", "pkg/**", ".github/workflows/ci.yml" ]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

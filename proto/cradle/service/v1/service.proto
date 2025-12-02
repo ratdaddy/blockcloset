@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package cradle.service.v1;
+option go_package = "github.com/ratdaddy/blockcloset/proto/gen/go/cradle/service/v1;servicev1";
+
+service CradleService {
+  rpc WriteObject(stream WriteObjectRequest) returns (WriteObjectResponse);
+}
+
+message WriteObjectRequest {
+  oneof payload {
+    WriteObjectMetadata metadata = 1;
+    bytes chunk = 2;
+  }
+}
+
+message WriteObjectMetadata {
+  string object_id = 1;
+  string bucket = 2;
+  int64 size = 3;
+}
+
+message WriteObjectResponse {
+  int64 bytes_written = 1;
+  int64 committed_at_ms = 2;
+}
