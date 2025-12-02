@@ -3,8 +3,6 @@ package grpcsvc
 import (
 	"context"
 	"errors"
-	"io"
-	"log/slog"
 	"testing"
 
 	"google.golang.org/grpc/codes"
@@ -107,27 +105,6 @@ func TestService_CreateBucket(t *testing.T) {
 	}
 }
 
-func assertGRPCError(t *testing.T, err error, code codes.Code, message string) {
-	t.Helper()
-
-	if err == nil {
-		t.Fatalf("want error, got nil")
-	}
-
-	st, ok := status.FromError(err)
-	if !ok {
-		t.Fatalf("want gRPC status error, got %v", err)
-	}
-
-	if st.Code() != code {
-		t.Fatalf("status code: got %v, want %v", st.Code(), code)
-	}
-
-	if st.Message() != message {
-		t.Fatalf("status message: got %q, want %q", st.Message(), message)
-	}
-}
-
 func assertConflictDetail(t *testing.T, err error, reason servicev1.BucketOwnershipConflict_Reason, bucket string) {
 	t.Helper()
 
@@ -159,14 +136,6 @@ func assertConflictDetail(t *testing.T, err error, reason servicev1.BucketOwners
 	}
 
 	t.Fatalf("status missing BucketOwnershipConflict detail: %v", err)
-}
-
-func assertNoError(t *testing.T, err error) {
-	t.Helper()
-
-	if err != nil {
-		t.Fatalf("want nil error, got %v", err)
-	}
 }
 
 func assertBucketResponse(t *testing.T, resp *servicev1.CreateBucketResponse, wantName string) {
@@ -227,8 +196,4 @@ func assertStoreNotCalled(t *testing.T, buckets *testutil.BucketStoreFake) {
 	if calls := buckets.Calls(); len(calls) != 0 {
 		t.Fatalf("bucket store calls: got %d, want 0 (calls=%v)", len(calls), calls)
 	}
-}
-
-func newDiscardLogger() *slog.Logger {
-	return slog.New(slog.NewTextHandler(io.Discard, &slog.HandlerOptions{}))
 }

@@ -156,4 +156,28 @@ grpcurl -plaintext -d '{}' $GANTRY_ADDR gantry.service.v1.GantryService/ListBuck
 
 # resolve write:
 grpcurl -plaintext -d '{"bucket":"my-bucket","key":"my-key.txt","size":1024}' $GANTRY_ADDR gantry.service.v1.GantryService/ResolveWrite
----
+```
+
+Grpcurl exampe to run directly with cradle:
+```bash
+# reflection:
+grpcurl -plaintext $CRADLE_ADDR list cradle.service.v1.CradleService
+grpcurl -plaintext $CRADLE_ADDR describe cradle.service.v1.CradleService.WriteObject
+
+# successful write object
+cat <<'EOF' | \
+grpcurl -plaintext -d @ $CRADLE_ADDR cradle.service.v1.CradleService/WriteObject
+{"metadata":{"object_id":"test123","bucket":"test-bucket","size":11}}
+{"chunk":"aGVsbG8g"}
+{"chunk":"d29ybGQ="}
+EOF
+
+# stream failure
+grpcurl -plaintext -max-time 15 -d @ $CRADLE_ADDR cradle.service.v1.CradleService/WriteObject
+# Then let it time out or type and wait for timeout:
+{"metadata": {"object_id": "test-123", "bucket": "photos", "size": 11}}
+
+# metadata not first
+echo '{"chunk":"aGVsbG8g"}' | \
+grpcurl -plaintext -d @ $CRADLE_ADDR cradle.service.v1.CradleService/WriteObject
+```

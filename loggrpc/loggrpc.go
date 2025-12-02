@@ -14,7 +14,39 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-// Also need a StreamServerInterceptor for streaming RPCs
+func StreamServerInterceptor(logger *slog.Logger, o *Options) grpc.StreamServerInterceptor {
+	if o == nil {
+		o = &Options{Schema: SchemaOTEL}
+	}
+
+	s := o.Schema
+	if s == nil {
+		s = SchemaOTEL
+	}
+
+	return func(srv any, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+		if isReflectionMethod(info.FullMethod) {
+			return handler(srv, ss)
+		}
+
+		start := time.Now()
+
+		ctx := ss.Context()
+		ctx = context.WithValue(ctx, ctxKeyLogAttrs{}, &[]slog.Attr{})
+
+		err := handler(srv, &loggingServerStream{ServerStream: ss, ctx: ctx})
+
+		dur := time.Since(start)
+
+		code := status.Code(err)
+
+		msg := fmt.Sprintf("Stream %s => gRPC %v (%v)", info.FullMethod, code, dur)
+		logger.LogAttrs(ctx, codeToLevel(code), msg, getAttrs(ctx)...)
+
+		return err
+	}
+}
+
 func UnaryServerInterceptor(logger *slog.Logger, o *Options) grpc.UnaryServerInterceptor {
 	if o == nil {
 		o = &Options{Schema: SchemaOTEL}
@@ -86,13 +118,20 @@ func UnaryServerInterceptor(logger *slog.Logger, o *Options) grpc.UnaryServerInt
 
 		attrs = appendAttrs(attrs, getAttrs(ctx)...)
 
-		level := codeToLevel(code)
-
 		msg := fmt.Sprintf("Unary %s => gRPC %v (%v)", info.FullMethod, code, dur)
 
-		logger.LogAttrs(ctx, level, msg, attrs...)
+		logger.LogAttrs(ctx, codeToLevel(code), msg, attrs...)
 		return resp, err
 	}
+}
+
+type loggingServerStream struct {
+	grpc.ServerStream
+	ctx context.Context
+}
+
+func (s *loggingServerStream) Context() context.Context {
+	return s.ctx
 }
 
 func appendAttrs(attrs []slog.Attr, newAttrs ...slog.Attr) []slog.Attr {
@@ -148,5 +187,15 @@ func codeToLevel(c codes.Code) slog.Level {
 		return slog.LevelError
 	default:
 		return slog.LevelError
+	}
+}
+
+func isReflectionMethod(fullMethod string) bool {
+	switch fullMethod {
+	case "/grpc.reflection.v1alpha.ServerReflection/ServerReflectionInfo",
+		"/grpc.reflection.v1.ServerReflection/ServerReflectionInfo":
+		return true
+	default:
+		return false
 	}
 }

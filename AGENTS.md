@@ -57,6 +57,17 @@
 - After writing a new test do not write the production behavior until told to do so by the requester.
 - Follow an interleaved TDD loop when collaborating with the requester: introduce one failing test (or expand an existing test with a new failing assertion), then immediately add the minimal code to make that specific failure pass before adding the next test. Keep each test/code pair as small as practical so the requester can review the intent at every increment.
 
+### Pattern Consistency Across Services
+When asked to match patterns from reference code (e.g., "following Gantry pattern"):
+- **Exact naming conventions**: Match helper function names exactly (e.g., `newDiscardLogger()` not `newTestLogger()`)
+- **Table-driven structure**: Use same `type tc struct` pattern with consistent field naming
+- **Parallel execution**: Include `t.Parallel()` at both test suite and case level if reference does
+- **Assert helpers**: Match assertion function signatures and naming (e.g., `assertNoError`, `assertGRPCError`)
+- **Test setup patterns**: Match how dependencies are constructed (fakes, stubs, mocks)
+- **Error checking style**: Use same approach for status code and message validation
+- **Import organization**: Group imports the same way (standard/third-party/internal)
+- Flag any deviations from the reference pattern, even minor naming differences, for review
+
 ## Commit & Pull Request Guidelines
 - Write short, imperative commit subjects (e.g., "Add centralized environment configuration") and reference issues in the body when relevant.
 - All Pull Requests should be atomic and focused on a single change or feature.
