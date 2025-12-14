@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/ratdaddy/blockcloset/flatbed/internal/config"
+	"github.com/ratdaddy/blockcloset/flatbed/internal/cradle"
 	"github.com/ratdaddy/blockcloset/flatbed/internal/gantry"
 	"github.com/ratdaddy/blockcloset/flatbed/internal/httpapi"
 	"github.com/ratdaddy/blockcloset/flatbed/internal/httpapi/handlers"
@@ -15,11 +16,15 @@ import (
 )
 
 var (
-	buildHandler = func(g handlers.GantryClient) http.Handler {
-		return httpapi.NewRouter(handlers.NewHandlers(g))
+	buildHandler = func(g handlers.GantryClient, c handlers.CradleClient) http.Handler {
+		return httpapi.NewRouter(handlers.NewHandlers(g, c))
 	}
 	gantryClient = func(addr string) (handlers.GantryClient, error) {
 		return gantry.New(context.Background(), addr)
+	}
+	cradleClient = func() (handlers.CradleClient, error) {
+		pool := cradle.NewPool()
+		return cradle.New(pool), nil
 	}
 	listenAndServe = http.ListenAndServe
 )
@@ -41,7 +46,20 @@ func main() {
 		}()
 	}
 
-	h := buildHandler(g)
+	c, err := cradleClient()
+	if err != nil {
+		slog.Error("cradle client init", "err", err)
+		os.Exit(1)
+	}
+	if closer, ok := c.(interface{ Close() error }); ok {
+		defer func() {
+			if err := closer.Close(); err != nil {
+				slog.Error("cradle client close", "err", err)
+			}
+		}()
+	}
+
+	h := buildHandler(g, c)
 
 	addr := fmt.Sprintf(":%d", config.FlatbedPort)
 	slog.Info("starting flatbed", "addr", addr)

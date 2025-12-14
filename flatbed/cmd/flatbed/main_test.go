@@ -17,25 +17,31 @@ import (
 func TestMain_WiresAddressAndHandler(t *testing.T) {
 	t.Parallel()
 
-	origBuild, origListen, origGantry := buildHandler, listenAndServe, gantryClient
-	defer func() { buildHandler, listenAndServe, gantryClient = origBuild, origListen, origGantry }()
+	origBuild, origListen, origGantry, origCradle := buildHandler, listenAndServe, gantryClient, cradleClient
+	defer func() { buildHandler, listenAndServe, gantryClient, cradleClient = origBuild, origListen, origGantry, origCradle }()
 
 	fg := testutil.NewGantryStub()
 	gantryClient = func(addr string) (handlers.GantryClient, error) {
 		return fg, nil
 	}
 
+	fc := testutil.NewCradleStub()
+	cradleClient = func() (handlers.CradleClient, error) {
+		return fc, nil
+	}
+
 	var gotAddr string
 	var served bool
 
 	type testCase struct {
-		name       string
-		method     string
-		target     string
-		headers    map[string]string
-		wantStatus int
-		callName   string
-		callCount  func(*testutil.GantryStub) int
+		name             string
+		method           string
+		target           string
+		headers          map[string]string
+		wantStatus       int
+		callName         string
+		callCount        func(*testutil.GantryStub) int
+		cradleCallCount  func(*testutil.CradleStub) int
 	}
 
 	tests := []testCase{
@@ -56,13 +62,14 @@ func TestMain_WiresAddressAndHandler(t *testing.T) {
 			callCount:  (*testutil.GantryStub).ListCount,
 		},
 		{
-			name:       "E2E - PutObject",
-			method:     http.MethodPut,
-			target:     "/demo-bucket/demo-key",
-			headers:    map[string]string{"Content-Length": "1024"},
-			wantStatus: http.StatusOK,
-			callName:   "gantry resolve write",
-			callCount:  (*testutil.GantryStub).PlanWriteCount,
+			name:            "E2E - PutObject",
+			method:          http.MethodPut,
+			target:          "/demo-bucket/demo-key",
+			headers:         map[string]string{"Content-Length": "1024"},
+			wantStatus:      http.StatusOK,
+			callName:        "gantry resolve write",
+			callCount:       (*testutil.GantryStub).PlanWriteCount,
+			cradleCallCount: (*testutil.CradleStub).WriteObjectCount,
 		},
 	}
 
@@ -85,6 +92,11 @@ func TestMain_WiresAddressAndHandler(t *testing.T) {
 					t.Fatalf("%s: %s count got %d, want 1", tt.name, tt.callName, got)
 				}
 			}
+			if tt.cradleCallCount != nil {
+				if got := tt.cradleCallCount(fc); got != 1 {
+					t.Fatalf("%s: cradle write object count got %d, want 1", tt.name, got)
+				}
+			}
 
 			// reset for next iteration
 			fg.CreateCalls = nil
@@ -92,6 +104,8 @@ func TestMain_WiresAddressAndHandler(t *testing.T) {
 			fg.PlanWriteCalls = nil
 			fg.CreateFn = nil
 			fg.ListFn = nil
+			fc.WriteObjectCalls = nil
+			fc.WriteObjectFn = nil
 		}
 		served = true
 		return nil

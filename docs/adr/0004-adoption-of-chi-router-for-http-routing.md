@@ -1,6 +1,6 @@
 # 0004: Adoption of chi Router for HTTP Routing
 
-* **Status**: Adopted
+* **Status**: Superseded by [ADR 0013](0013-adoption-of-enhanced-servemux-for-http-routing.md)
 * **Date**: 2025-08-11
 * **Author**: Brian VanLoo
 

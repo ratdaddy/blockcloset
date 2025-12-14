@@ -48,8 +48,12 @@ func (s *Service) WriteObject(stream servicev1.CradleService_WriteObjectServer) 
 		req, err := stream.Recv()
 		if errors.Is(err, io.EOF) {
 			s.log.InfoContext(ctx, "write stream complete", "bytes_received", total)
+
+			// Check for special test buckets that trigger specific behaviors
+			bytesToReport := checkTestBucket(bucket, total)
+
 			return stream.SendAndClose(&servicev1.WriteObjectResponse{
-				BytesWritten:  total,
+				BytesWritten:  bytesToReport,
 				CommittedAtMs: time.Now().UnixMilli(),
 			})
 		}
