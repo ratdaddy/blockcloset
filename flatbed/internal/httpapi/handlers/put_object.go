@@ -79,8 +79,20 @@ func (h *Handlers) PutObject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO(Phase 2): Stream request body to Cradle using writePlan
 	logger.LogWritePlan(r, writePlan.GetObjectId(), writePlan.GetCradleAddress(), contentLength)
+
+	// Stream request body to Cradle
+	bytesWritten, _, err := h.Cradle.WriteObject(r.Context(), writePlan.GetCradleAddress(), writePlan.GetObjectId(), bucket, contentLength, r.Body)
+	if err != nil {
+		respond.Error(w, r, "InternalError", http.StatusInternalServerError)
+		return
+	}
+
+	// Validate bytes written matches expected size
+	if bytesWritten != contentLength {
+		respond.Error(w, r, "InternalError", http.StatusInternalServerError)
+		return
+	}
 
 	w.WriteHeader(http.StatusOK)
 }

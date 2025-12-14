@@ -62,7 +62,7 @@ func TestHandlers_ListBuckets(t *testing.T) {
 				return c.listResp, c.listErr
 			}
 
-			h := &handlers.Handlers{Gantry: stub}
+			h := &handlers.Handlers{Gantry: stub, Cradle: testutil.NewCradleStub()}
 
 			req := httptest.NewRequest(http.MethodGet, "/", nil)
 			rec := httptest.NewRecorder()

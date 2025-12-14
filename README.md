@@ -108,6 +108,9 @@ curl -i http://$FLATBED_ADDR/
 # put object:
 curl -i -X PUT --data 'hello' http://$FLATBED_ADDR/hello/object
 
+# put object from a file:
+curl -X PUT -H "Content-Length: $(wc -c < filename)" --data-binary @filename http://$FLATBED_ADDR/hello/object
+
 # put object with no content length error:
 curl -i -X PUT --data '' http://$FLATBED_ADDR/hello/object -H "Content-Length:" --http1.0
 
@@ -134,6 +137,9 @@ curl -i -X PUT --data 'hello' http://$FLATBED_ADDR/no-cradles/object
 
 # put object panic gantry:
 curl -i -X PUT --data 'hello' http://$FLATBED_ADDR/panic/object
+
+# put object with write size mismatch
+curl -i -X PUT --data 'hello' http://$FLATBED_ADDR/size-mismatch/object
 ```
 
 Grpcurl example to run directly with gantry:
@@ -155,7 +161,7 @@ grpcurl -plaintext -d '{"name":"panic"}' $GANTRY_ADDR gantry.service.v1.GantrySe
 grpcurl -plaintext -d '{}' $GANTRY_ADDR gantry.service.v1.GantryService/ListBuckets
 
 # resolve write:
-grpcurl -plaintext -d '{"bucket":"my-bucket","key":"my-key.txt","size":1024}' $GANTRY_ADDR gantry.service.v1.GantryService/ResolveWrite
+grpcurl -plaintext -d '{"bucket":"my-bucket","key":"my-key.txt","size":1024}' $GANTRY_ADDR gantry.service.v1.GantryService/PlanWrite
 ```
 
 Grpcurl exampe to run directly with cradle:

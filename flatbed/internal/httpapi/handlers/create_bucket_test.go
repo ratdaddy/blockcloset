@@ -155,7 +155,7 @@ func TestCreateBucket_ValidationGantryAndResponse(t *testing.T) {
 					return "", c.gantryErr
 				}
 			}
-			h := &handlers.Handlers{BucketValidator: v, Gantry: g}
+			h := &handlers.Handlers{BucketValidator: v, Gantry: g, Cradle: testutil.NewCradleStub()}
 
 			req := reqWithBucket(t, http.MethodPut, c.bucket)
 			rec := httptest.NewRecorder()

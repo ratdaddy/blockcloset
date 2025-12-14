@@ -2,6 +2,7 @@ package handlers_test
 
 import (
 	"context"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -197,6 +198,7 @@ func TestPutObject_ValidationGantryAndResponse(t *testing.T) {
 				BucketValidator: validation.DefaultBucketNameValidator{},
 				KeyValidator:    validation.DefaultKeyValidator{},
 				Gantry:          stub,
+				Cradle:          testutil.NewCradleStub(),
 			}
 
 			req := httptest.NewRequest(http.MethodPut, "/", nil)
@@ -234,6 +236,163 @@ func TestPutObject_ValidationGantryAndResponse(t *testing.T) {
 				}
 				if call.Size != c.wantSize {
 					t.Fatalf("PlanWrite size: got %d, want %d", call.Size, c.wantSize)
+				}
+			}
+
+			if c.wantBodySubstr != "" {
+				body, _ := io.ReadAll(rec.Body)
+				if !strings.Contains(string(body), c.wantBodySubstr) {
+					t.Fatalf("body: expected substring %q, got %q", c.wantBodySubstr, string(body))
+				}
+			}
+		})
+	}
+}
+
+func TestPutObject_CradleIntegration(t *testing.T) {
+	t.Parallel()
+
+	type tc struct {
+		name               string
+		bucket             string
+		key                string
+		contentLength      string
+		body               string
+		planWriteResp      *writeplanv1.WritePlan
+		cradleErr          error
+		cradleBytesWritten int64 // if non-zero, stub returns this value
+		wantStatus         int
+		wantCradleCalls    int
+		wantCradleAddress  string
+		wantCradleObjID    string
+		wantCradleBucket   string
+		wantCradleSize     int64
+		wantCradleBody     string
+		wantBodySubstr     string
+	}
+
+	cases := []tc{
+		{
+			name:          "successful write streams to cradle",
+			bucket:        "photos",
+			key:           "vacation.jpg",
+			contentLength: "17",
+			body:          "test file content",
+			planWriteResp: &writeplanv1.WritePlan{
+				ObjectId:      "01ARZ3NDEKTSV4RRFFQ69G5FAV",
+				CradleAddress: "localhost:9444",
+			},
+			wantStatus:        http.StatusOK,
+			wantCradleCalls:   1,
+			wantCradleAddress: "localhost:9444",
+			wantCradleObjID:   "01ARZ3NDEKTSV4RRFFQ69G5FAV",
+			wantCradleBucket:  "photos",
+			wantCradleSize:    17,
+			wantCradleBody:    "test file content",
+		},
+		{
+			name:          "cradle write failure returns 500",
+			bucket:        "photos",
+			key:           "vacation.jpg",
+			contentLength: "17",
+			body:          "test file content",
+			planWriteResp: &writeplanv1.WritePlan{
+				ObjectId:      "01ARZ3NDEKTSV4RRFFQ69G5FAV",
+				CradleAddress: "localhost:9444",
+			},
+			cradleErr:         errors.New("disk full"),
+			wantStatus:        http.StatusInternalServerError,
+			wantCradleCalls:   1,
+			wantCradleAddress: "localhost:9444",
+			wantCradleObjID:   "01ARZ3NDEKTSV4RRFFQ69G5FAV",
+			wantCradleBucket:  "photos",
+			wantCradleSize:    17,
+			wantCradleBody:    "test file content",
+			wantBodySubstr:    "InternalError",
+		},
+		{
+			name:               "size mismatch returns 500",
+			bucket:             "photos",
+			key:                "vacation.jpg",
+			contentLength:      "17",
+			body:               "test file content",
+			planWriteResp:      &writeplanv1.WritePlan{
+				ObjectId:      "01ARZ3NDEKTSV4RRFFQ69G5FAV",
+				CradleAddress: "localhost:9444",
+			},
+			cradleBytesWritten: 10, // mismatch: expected 17, got 10
+			wantStatus:         http.StatusInternalServerError,
+			wantCradleCalls:    1,
+			wantCradleAddress:  "localhost:9444",
+			wantCradleObjID:    "01ARZ3NDEKTSV4RRFFQ69G5FAV",
+			wantCradleBucket:   "photos",
+			wantCradleSize:     17,
+			wantCradleBody:     "test file content",
+			wantBodySubstr:     "InternalError",
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+
+			gantryStub := testutil.NewGantryStub()
+			gantryStub.PlanWriteFn = func(ctx context.Context, bucket, key string, size int64) (*writeplanv1.WritePlan, error) {
+				return c.planWriteResp, nil
+			}
+
+			cradleStub := testutil.NewCradleStub()
+			if c.cradleErr != nil {
+				cradleStub.WriteObjectFn = func(ctx context.Context, address, objectID, bucket string, size int64, body io.Reader) (int64, int64, error) {
+					return 0, 0, c.cradleErr
+				}
+			}
+			if c.cradleBytesWritten != 0 {
+				cradleStub.WriteObjectFn = func(ctx context.Context, address, objectID, bucket string, size int64, body io.Reader) (int64, int64, error) {
+					return c.cradleBytesWritten, 0, nil
+				}
+			}
+
+			h := &handlers.Handlers{
+				BucketValidator: validation.DefaultBucketNameValidator{},
+				KeyValidator:    validation.DefaultKeyValidator{},
+				Gantry:          gantryStub,
+				Cradle:          cradleStub,
+			}
+
+			req := httptest.NewRequest(http.MethodPut, "/", strings.NewReader(c.body))
+			req.SetPathValue("bucket", c.bucket)
+			req.SetPathValue("key", c.key)
+			req.Header.Set("Content-Length", c.contentLength)
+
+			rec := httptest.NewRecorder()
+
+			h.PutObject(rec, req)
+
+			if rec.Code != c.wantStatus {
+				t.Fatalf("status: got %d, want %d", rec.Code, c.wantStatus)
+			}
+
+			if cradleStub.WriteObjectCount() != c.wantCradleCalls {
+				t.Fatalf("WriteObject call count: got %d, want %d", cradleStub.WriteObjectCount(), c.wantCradleCalls)
+			}
+
+			if c.wantCradleCalls > 0 {
+				call := cradleStub.WriteObjectCalls[0]
+				if call.Address != c.wantCradleAddress {
+					t.Fatalf("WriteObject address: got %q, want %q", call.Address, c.wantCradleAddress)
+				}
+				if call.ObjectID != c.wantCradleObjID {
+					t.Fatalf("WriteObject objectID: got %q, want %q", call.ObjectID, c.wantCradleObjID)
+				}
+				if call.Bucket != c.wantCradleBucket {
+					t.Fatalf("WriteObject bucket: got %q, want %q", call.Bucket, c.wantCradleBucket)
+				}
+				if call.Size != c.wantCradleSize {
+					t.Fatalf("WriteObject size: got %d, want %d", call.Size, c.wantCradleSize)
+				}
+				if string(call.BodyBytes) != c.wantCradleBody {
+					t.Fatalf("WriteObject body: got %q, want %q", string(call.BodyBytes), c.wantCradleBody)
 				}
 			}
 

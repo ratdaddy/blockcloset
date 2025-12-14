@@ -31,11 +31,12 @@ const (
 )
 
 var (
-	AppEnv       envVal
-	LogFormat    logFormatVal
-	LogVerbosity logVerbosityVal
-	FlatbedPort  int
-	GantryAddr   string
+	AppEnv             envVal
+	LogFormat          logFormatVal
+	LogVerbosity       logVerbosityVal
+	FlatbedPort        int
+	GantryAddr         string
+	PutObjectChunkSize int = 8192
 )
 
 func Init() {
@@ -78,6 +79,12 @@ func Init() {
 
 	if v := strings.TrimSpace(os.Getenv("FLATBED_GANTRY_ADDR")); v != "" {
 		GantryAddr = v
+	}
+
+	if v := strings.TrimSpace(os.Getenv("PUT_OBJECT_CHUNK_SIZE")); v != "" {
+		if size, err := strconv.Atoi(v); err == nil && size > 0 {
+			PutObjectChunkSize = size
+		}
 	}
 }
 

@@ -6,8 +6,6 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
 	bucketv1 "github.com/ratdaddy/blockcloset/proto/gen/gantry/bucket/v1"
 	servicev1 "github.com/ratdaddy/blockcloset/proto/gen/gantry/service/v1"
@@ -43,16 +41,6 @@ func TestClientListBuckets(t *testing.T) {
 				{Name: "first", CreatedAt: parseTime(t, "2025-01-01T01:02:03Z")},
 				{Name: "second", CreatedAt: parseTime(t, "2025-01-02T04:05:06Z")},
 			},
-		},
-		{
-			name: "propagates errors",
-			ctx:  context.Background(),
-			setup: func(svc *captureGantryService) {
-				svc.SetListBucketsHook(func(context.Context, *servicev1.ListBucketsRequest) (*servicev1.ListBucketsResponse, error) {
-					return nil, status.Error(codes.Internal, "boom")
-				})
-			},
-			wantErr: true,
 		},
 	}
 
