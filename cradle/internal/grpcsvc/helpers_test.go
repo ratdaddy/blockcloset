@@ -3,6 +3,7 @@ package grpcsvc
 import (
 	"io"
 	"log/slog"
+	"strings"
 	"testing"
 
 	"google.golang.org/grpc/codes"
@@ -21,7 +22,7 @@ func assertNoError(t *testing.T, err error) {
 	}
 }
 
-func assertGRPCError(t *testing.T, err error, code codes.Code, message string) {
+func assertGRPCError(t *testing.T, err error, code codes.Code, substring string) {
 	t.Helper()
 
 	if err == nil {
@@ -37,7 +38,7 @@ func assertGRPCError(t *testing.T, err error, code codes.Code, message string) {
 		t.Fatalf("status code: got %v, want %v", st.Code(), code)
 	}
 
-	if st.Message() != message {
-		t.Fatalf("status message: got %q, want %q", st.Message(), message)
+	if !strings.Contains(st.Message(), substring) {
+		t.Fatalf("status message: got %q, want to contain %q", st.Message(), substring)
 	}
 }

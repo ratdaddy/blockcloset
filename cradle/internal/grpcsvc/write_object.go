@@ -42,12 +42,29 @@ func (s *Service) WriteObject(stream servicev1.CradleService_WriteObjectServer) 
 		slog.Int64("size", size),
 	)
 
+	writer, err := s.newWriter(s.objectsRoot, bucket, objectID)
+	if err != nil {
+		return loggrpc.SetError(ctx, status.Error(codes.Internal, err.Error()))
+	}
+
+	var committed bool
+	defer func() {
+		if !committed {
+			writer.Abort()
+		}
+	}()
+
 	var total int64
 
 	for {
 		req, err := stream.Recv()
 		if errors.Is(err, io.EOF) {
 			s.log.InfoContext(ctx, "write stream complete", "bytes_received", total)
+
+			if err := writer.Commit(); err != nil {
+				return loggrpc.SetError(ctx, status.Error(codes.Internal, err.Error()))
+			}
+			committed = true
 
 			// Check for special test buckets that trigger specific behaviors
 			bytesToReport := checkTestBucket(bucket, total)
@@ -66,9 +83,14 @@ func (s *Service) WriteObject(stream servicev1.CradleService_WriteObjectServer) 
 			return loggrpc.SetError(ctx, status.Error(codes.InvalidArgument, "chunk payload missing"))
 		}
 
+		_, err = writer.Write(chunk)
+		if err != nil {
+			return loggrpc.SetError(ctx, status.Error(codes.Internal, err.Error()))
+		}
+
 		chunkBytes := int64(len(chunk))
 		total += chunkBytes
-		s.log.InfoContext(ctx, "write chunk received",
+		s.log.DebugContext(ctx, "write chunk received",
 			"chunk_contents", string(chunk),
 			"chunk_bytes", chunkBytes,
 			"accumulated_bytes", total,
