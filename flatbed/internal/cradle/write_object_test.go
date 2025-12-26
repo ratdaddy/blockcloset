@@ -6,6 +6,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/ratdaddy/blockcloset/flatbed/internal/requestid"
 )
 
 func TestClient_WriteObject(t *testing.T) {
@@ -18,6 +20,7 @@ func TestClient_WriteObject(t *testing.T) {
 		bucket           string
 		size             int64
 		body             string
+		requestID        string // if non-empty, add to context and verify propagation
 		wantErr          bool
 		wantBytesWritten int64
 		wantMetadata     bool
@@ -45,6 +48,29 @@ func TestClient_WriteObject(t *testing.T) {
 			body:     "hello world",
 			wantErr:  true,
 		},
+		{
+			name:             "request ID propagated in metadata",
+			address:          "localhost:9444",
+			objectID:         "obj-789",
+			bucket:           "photos",
+			size:             5,
+			body:             "hello",
+			requestID:        "req-123",
+			wantBytesWritten: 5,
+			wantMetadata:     true,
+			wantChunkCount:   1,
+		},
+		{
+			name:             "no request ID when not in context",
+			address:          "localhost:9444",
+			objectID:         "obj-999",
+			bucket:           "photos",
+			size:             5,
+			body:             "world",
+			wantBytesWritten: 5,
+			wantMetadata:     true,
+			wantChunkCount:   1,
+		},
 	}
 
 	for _, c := range cases {
@@ -54,6 +80,11 @@ func TestClient_WriteObject(t *testing.T) {
 			client, svc := newTestClient(t)
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 			t.Cleanup(cancel)
+
+			// Add request ID to context if test case specifies it
+			if c.requestID != "" {
+				ctx = requestid.WithRequestID(ctx, c.requestID)
+			}
 
 			bodyReader := strings.NewReader(c.body)
 
@@ -109,6 +140,18 @@ func TestClient_WriteObject(t *testing.T) {
 
 			if receivedBody.String() != c.body {
 				t.Fatalf("received body: got %q, want %q", receivedBody.String(), c.body)
+			}
+
+			// Verify request ID metadata
+			if c.requestID != "" {
+				meta := call.Metadata.Get("x-request-id")
+				if len(meta) != 1 || meta[0] != c.requestID {
+					t.Fatalf("x-request-id metadata: got %v, want [%s]", meta, c.requestID)
+				}
+			} else {
+				if meta := call.Metadata.Get("x-request-id"); len(meta) != 0 {
+					t.Fatalf("x-request-id metadata: got %v, want []", meta)
+				}
 			}
 		})
 	}

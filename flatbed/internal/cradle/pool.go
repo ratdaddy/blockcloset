@@ -6,6 +6,9 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/metadata"
+
+	"github.com/ratdaddy/blockcloset/flatbed/internal/requestid"
 )
 
 type Pool struct {
@@ -18,7 +21,10 @@ func NewPool() *Pool {
 	return &Pool{
 		conns: make(map[string]*grpc.ClientConn),
 		dialer: func(ctx context.Context, address string) (*grpc.ClientConn, error) {
-			return grpc.NewClient(address, grpc.WithTransportCredentials(insecure.NewCredentials()))
+			return grpc.NewClient(address,
+				grpc.WithTransportCredentials(insecure.NewCredentials()),
+				grpc.WithChainStreamInterceptor(requestIDStreamInterceptor()),
+			)
 		},
 	}
 }
@@ -58,4 +64,13 @@ func (p *Pool) Close() error {
 	}
 
 	return nil
+}
+
+func requestIDStreamInterceptor() grpc.StreamClientInterceptor {
+	return func(ctx context.Context, desc *grpc.StreamDesc, cc *grpc.ClientConn, method string, streamer grpc.Streamer, opts ...grpc.CallOption) (grpc.ClientStream, error) {
+		if id := requestid.RequestIDFromContext(ctx); id != "" {
+			ctx = metadata.AppendToOutgoingContext(ctx, "x-request-id", id)
+		}
+		return streamer(ctx, desc, cc, method, opts...)
+	}
 }
