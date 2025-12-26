@@ -148,6 +148,7 @@ func newTestClient(t *testing.T) (*Client, *captureCradleService) {
 	pool := NewPoolWithDialer(func(ctx context.Context, address string) (*grpc.ClientConn, error) {
 		return grpc.NewClient(address,
 			grpc.WithTransportCredentials(insecure.NewCredentials()),
+			grpc.WithChainStreamInterceptor(requestIDStreamInterceptor()),
 			grpc.WithContextDialer(func(ctx context.Context, _ string) (net.Conn, error) {
 				return lis.DialContext(ctx)
 			}))
