@@ -19,6 +19,7 @@ type CradleServerStore interface {
 
 type ObjectStore interface {
 	CreatePending(ctx context.Context, id, bucketID, key string, sizeExpected int64, cradleServerID string, createdAt time.Time) (ObjectRecord, error)
+	CommitWithReplace(ctx context.Context, objectID string, sizeActual int64, lastModifiedMs int64, updatedAt time.Time) error
 }
 
 type Store interface {

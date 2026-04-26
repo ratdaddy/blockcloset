@@ -3,9 +3,12 @@ package store
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"time"
 )
+
+var ErrObjectNotPending = errors.New("object not found or not in PENDING state")
 
 type objectStore struct {
 	db *sql.DB
@@ -50,4 +53,54 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 		CreatedAt:      stamp,
 		UpdatedAt:      stamp,
 	}, nil
+}
+
+func (s *objectStore) CommitWithReplace(ctx context.Context, objectID string, sizeActual int64, lastModifiedMs int64, updatedAt time.Time) error {
+	stamp := updatedAt.UTC().Truncate(time.Microsecond)
+	micros := stamp.UnixMicro()
+
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("commit object, begin tx: %w", err)
+	}
+	defer tx.Rollback()
+
+	_, err = tx.ExecContext(ctx, `
+		WITH pending AS (
+			SELECT bucket_id, key FROM objects WHERE object_id = ? AND state = 'PENDING'
+		)
+		UPDATE objects
+		SET state = 'REPLACED',
+		    updated_at = ?
+		WHERE state = 'COMMITTED'
+		  AND bucket_id = (SELECT bucket_id FROM pending)
+		  AND key = (SELECT key FROM pending)
+	`, objectID, micros)
+	if err != nil {
+		return fmt.Errorf("commit object, replace previous: %w", err)
+	}
+
+	result, err := tx.ExecContext(ctx, `
+		UPDATE objects
+		SET state = 'COMMITTED',
+		    size_actual = ?,
+		    last_modified = ?,
+		    updated_at = ?
+		WHERE object_id = ?
+		  AND state = 'PENDING'
+	`, sizeActual, lastModifiedMs, micros, objectID)
+	if err != nil {
+		return fmt.Errorf("commit object: %w", err)
+	}
+
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("commit object, rows affected: %w", err)
+	}
+
+	if rows != 1 {
+		return fmt.Errorf("commit object: %w", ErrObjectNotPending)
+	}
+
+	return tx.Commit()
 }

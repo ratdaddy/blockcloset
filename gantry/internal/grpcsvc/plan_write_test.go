@@ -123,7 +123,7 @@ func TestService_PlanWrite(t *testing.T) {
 			size:        0,
 			wantErr:     true,
 			wantCode:    codes.InvalidArgument,
-			wantMessage: "InvalidArgument",
+			wantMessage: "InvalidSize",
 		},
 		{
 			name:        "size exceeds max returns InvalidArgument",
