@@ -501,6 +501,108 @@ func (x *PlanWriteError) GetBucket() string {
 	return ""
 }
 
+// CommitObjectRequest transitions an object from PENDING to COMMITTED state.
+type CommitObjectRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// The object ID returned from PlanWrite (ULID format).
+	ObjectId string `protobuf:"bytes,1,opt,name=object_id,json=objectId,proto3" json:"object_id,omitempty"`
+	// The actual number of bytes written to storage.
+	Size int64 `protobuf:"varint,2,opt,name=size,proto3" json:"size,omitempty"`
+	// Unix timestamp in milliseconds when the object was committed to storage.
+	LastModifiedMs int64 `protobuf:"varint,3,opt,name=last_modified_ms,json=lastModifiedMs,proto3" json:"last_modified_ms,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *CommitObjectRequest) Reset() {
+	*x = CommitObjectRequest{}
+	mi := &file_gantry_service_v1_service_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CommitObjectRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CommitObjectRequest) ProtoMessage() {}
+
+func (x *CommitObjectRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_gantry_service_v1_service_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CommitObjectRequest.ProtoReflect.Descriptor instead.
+func (*CommitObjectRequest) Descriptor() ([]byte, []int) {
+	return file_gantry_service_v1_service_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *CommitObjectRequest) GetObjectId() string {
+	if x != nil {
+		return x.ObjectId
+	}
+	return ""
+}
+
+func (x *CommitObjectRequest) GetSize() int64 {
+	if x != nil {
+		return x.Size
+	}
+	return 0
+}
+
+func (x *CommitObjectRequest) GetLastModifiedMs() int64 {
+	if x != nil {
+		return x.LastModifiedMs
+	}
+	return 0
+}
+
+// CommitObjectResponse indicates successful commit.
+// An empty response means the object was successfully committed.
+type CommitObjectResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CommitObjectResponse) Reset() {
+	*x = CommitObjectResponse{}
+	mi := &file_gantry_service_v1_service_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CommitObjectResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CommitObjectResponse) ProtoMessage() {}
+
+func (x *CommitObjectResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_gantry_service_v1_service_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CommitObjectResponse.ProtoReflect.Descriptor instead.
+func (*CommitObjectResponse) Descriptor() ([]byte, []int) {
+	return file_gantry_service_v1_service_proto_rawDescGZIP(), []int{9}
+}
+
 var File_gantry_service_v1_service_proto protoreflect.FileDescriptor
 
 const file_gantry_service_v1_service_proto_rawDesc = "" +
@@ -534,11 +636,17 @@ const file_gantry_service_v1_service_proto_rawDesc = "" +
 	"\x12REASON_UNSPECIFIED\x10\x00\x12\x1b\n" +
 	"\x17REASON_BUCKET_NOT_FOUND\x10\x01\x12\x1f\n" +
 	"\x1bREASON_BUCKET_ACCESS_DENIED\x10\x02\x12\x1c\n" +
-	"\x18REASON_NO_CRADLE_SERVERS\x10\x032\xa6\x02\n" +
+	"\x18REASON_NO_CRADLE_SERVERS\x10\x03\"p\n" +
+	"\x13CommitObjectRequest\x12\x1b\n" +
+	"\tobject_id\x18\x01 \x01(\tR\bobjectId\x12\x12\n" +
+	"\x04size\x18\x02 \x01(\x03R\x04size\x12(\n" +
+	"\x10last_modified_ms\x18\x03 \x01(\x03R\x0elastModifiedMs\"\x16\n" +
+	"\x14CommitObjectResponse2\x87\x03\n" +
 	"\rGantryService\x12_\n" +
 	"\fCreateBucket\x12&.gantry.service.v1.CreateBucketRequest\x1a'.gantry.service.v1.CreateBucketResponse\x12\\\n" +
 	"\vListBuckets\x12%.gantry.service.v1.ListBucketsRequest\x1a&.gantry.service.v1.ListBucketsResponse\x12V\n" +
-	"\tPlanWrite\x12#.gantry.service.v1.PlanWriteRequest\x1a$.gantry.service.v1.PlanWriteResponseB\xd2\x01\n" +
+	"\tPlanWrite\x12#.gantry.service.v1.PlanWriteRequest\x1a$.gantry.service.v1.PlanWriteResponse\x12_\n" +
+	"\fCommitObject\x12&.gantry.service.v1.CommitObjectRequest\x1a'.gantry.service.v1.CommitObjectResponseB\xd2\x01\n" +
 	"\x15com.gantry.service.v1B\fServiceProtoP\x01ZEgithub.com/ratdaddy/blockcloset/proto/gen/gantry/service/v1;servicev1\xa2\x02\x03GSX\xaa\x02\x11Gantry.Service.V1\xca\x02\x11Gantry\\Service\\V1\xe2\x02\x1dGantry\\Service\\V1\\GPBMetadata\xea\x02\x13Gantry::Service::V1b\x06proto3"
 
 var (
@@ -554,7 +662,7 @@ func file_gantry_service_v1_service_proto_rawDescGZIP() []byte {
 }
 
 var file_gantry_service_v1_service_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_gantry_service_v1_service_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_gantry_service_v1_service_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
 var file_gantry_service_v1_service_proto_goTypes = []any{
 	(BucketOwnershipConflict_Reason)(0), // 0: gantry.service.v1.BucketOwnershipConflict.Reason
 	(PlanWriteError_Reason)(0),          // 1: gantry.service.v1.PlanWriteError.Reason
@@ -566,23 +674,27 @@ var file_gantry_service_v1_service_proto_goTypes = []any{
 	(*PlanWriteRequest)(nil),            // 7: gantry.service.v1.PlanWriteRequest
 	(*PlanWriteResponse)(nil),           // 8: gantry.service.v1.PlanWriteResponse
 	(*PlanWriteError)(nil),              // 9: gantry.service.v1.PlanWriteError
-	(*v1.Bucket)(nil),                   // 10: gantry.bucket.v1.Bucket
-	(*v11.WritePlan)(nil),               // 11: gantry.write_plan.v1.WritePlan
+	(*CommitObjectRequest)(nil),         // 10: gantry.service.v1.CommitObjectRequest
+	(*CommitObjectResponse)(nil),        // 11: gantry.service.v1.CommitObjectResponse
+	(*v1.Bucket)(nil),                   // 12: gantry.bucket.v1.Bucket
+	(*v11.WritePlan)(nil),               // 13: gantry.write_plan.v1.WritePlan
 }
 var file_gantry_service_v1_service_proto_depIdxs = []int32{
-	10, // 0: gantry.service.v1.CreateBucketResponse.bucket:type_name -> gantry.bucket.v1.Bucket
+	12, // 0: gantry.service.v1.CreateBucketResponse.bucket:type_name -> gantry.bucket.v1.Bucket
 	0,  // 1: gantry.service.v1.BucketOwnershipConflict.reason:type_name -> gantry.service.v1.BucketOwnershipConflict.Reason
-	10, // 2: gantry.service.v1.ListBucketsResponse.buckets:type_name -> gantry.bucket.v1.Bucket
-	11, // 3: gantry.service.v1.PlanWriteResponse.write_plan:type_name -> gantry.write_plan.v1.WritePlan
+	12, // 2: gantry.service.v1.ListBucketsResponse.buckets:type_name -> gantry.bucket.v1.Bucket
+	13, // 3: gantry.service.v1.PlanWriteResponse.write_plan:type_name -> gantry.write_plan.v1.WritePlan
 	1,  // 4: gantry.service.v1.PlanWriteError.reason:type_name -> gantry.service.v1.PlanWriteError.Reason
 	2,  // 5: gantry.service.v1.GantryService.CreateBucket:input_type -> gantry.service.v1.CreateBucketRequest
 	5,  // 6: gantry.service.v1.GantryService.ListBuckets:input_type -> gantry.service.v1.ListBucketsRequest
 	7,  // 7: gantry.service.v1.GantryService.PlanWrite:input_type -> gantry.service.v1.PlanWriteRequest
-	3,  // 8: gantry.service.v1.GantryService.CreateBucket:output_type -> gantry.service.v1.CreateBucketResponse
-	6,  // 9: gantry.service.v1.GantryService.ListBuckets:output_type -> gantry.service.v1.ListBucketsResponse
-	8,  // 10: gantry.service.v1.GantryService.PlanWrite:output_type -> gantry.service.v1.PlanWriteResponse
-	8,  // [8:11] is the sub-list for method output_type
-	5,  // [5:8] is the sub-list for method input_type
+	10, // 8: gantry.service.v1.GantryService.CommitObject:input_type -> gantry.service.v1.CommitObjectRequest
+	3,  // 9: gantry.service.v1.GantryService.CreateBucket:output_type -> gantry.service.v1.CreateBucketResponse
+	6,  // 10: gantry.service.v1.GantryService.ListBuckets:output_type -> gantry.service.v1.ListBucketsResponse
+	8,  // 11: gantry.service.v1.GantryService.PlanWrite:output_type -> gantry.service.v1.PlanWriteResponse
+	11, // 12: gantry.service.v1.GantryService.CommitObject:output_type -> gantry.service.v1.CommitObjectResponse
+	9,  // [9:13] is the sub-list for method output_type
+	5,  // [5:9] is the sub-list for method input_type
 	5,  // [5:5] is the sub-list for extension type_name
 	5,  // [5:5] is the sub-list for extension extendee
 	0,  // [0:5] is the sub-list for field type_name
@@ -599,7 +711,7 @@ func file_gantry_service_v1_service_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_gantry_service_v1_service_proto_rawDesc), len(file_gantry_service_v1_service_proto_rawDesc)),
 			NumEnums:      2,
-			NumMessages:   8,
+			NumMessages:   10,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

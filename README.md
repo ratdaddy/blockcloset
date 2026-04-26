@@ -162,6 +162,10 @@ grpcurl -plaintext -d '{}' $GANTRY_ADDR gantry.service.v1.GantryService/ListBuck
 
 # resolve write:
 grpcurl -plaintext -d '{"bucket":"my-bucket","key":"my-key.txt","size":1024}' $GANTRY_ADDR gantry.service.v1.GantryService/PlanWrite
+
+# commit object:
+grpcurl -plaintext -d '{"object_id":"<object_id>","size":<bytes_written>,"last_modified_ms":<unix_ms>}' $GANTRY_ADDR gantry.service.v1.GantryService/CommitObject
+
 ```
 
 Grpcurl exampe to run directly with cradle:

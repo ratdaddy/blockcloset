@@ -10,6 +10,7 @@ service GantryService {
   rpc CreateBucket(CreateBucketRequest) returns (CreateBucketResponse);
   rpc ListBuckets(ListBucketsRequest) returns (ListBucketsResponse);
   rpc PlanWrite(PlanWriteRequest) returns (PlanWriteResponse);
+  rpc CommitObject(CommitObjectRequest) returns (CommitObjectResponse);
 }
 
 message CreateBucketRequest {
@@ -57,4 +58,22 @@ message PlanWriteError {
   }
   Reason reason = 1;
   string bucket = 2;
+}
+
+// CommitObjectRequest transitions an object from PENDING to COMMITTED state.
+message CommitObjectRequest {
+  // The object ID returned from PlanWrite (ULID format).
+  string object_id = 1;
+
+  // The actual number of bytes written to storage.
+  int64 size = 2;
+
+  // Unix timestamp in milliseconds when the object was committed to storage.
+  int64 last_modified_ms = 3;
+}
+
+// CommitObjectResponse indicates successful commit.
+// An empty response means the object was successfully committed.
+message CommitObjectResponse {
+  // Empty - success indicated by lack of gRPC error.
 }

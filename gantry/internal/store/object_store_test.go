@@ -3,6 +3,7 @@ package store_test
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"testing"
 	"time"
 
@@ -97,6 +98,163 @@ func TestObjectStore_Create(t *testing.T) {
 
 			assertObjectRecord(t, ctx, db, rec, c.id, c.bucketID, c.key, c.sizeExpected, c.cradleServerID, createdAt)
 		})
+	}
+}
+
+func TestObjectStore_CommitWithReplace(t *testing.T) {
+	t.Parallel()
+
+	type tc struct {
+		name            string
+		sizeActual      int64
+		lastModifiedMs  int64
+		skipSetup       bool
+		preCommit       bool
+		replaceExisting bool
+		wantErr         error
+	}
+
+	cases := []tc{
+		{
+			name:           "transitions PENDING to COMMITTED",
+			sizeActual:     987,
+			lastModifiedMs: 1735689600000,
+		},
+		{
+			name:           "object not found returns error",
+			sizeActual:     100,
+			lastModifiedMs: 12345,
+			skipSetup:      true,
+			wantErr:        store.ErrObjectNotPending,
+		},
+		{
+			name:           "already committed object returns error",
+			sizeActual:     987,
+			lastModifiedMs: 1735689600000,
+			skipSetup:      true,
+			preCommit:      true,
+			wantErr:        store.ErrObjectNotPending,
+		},
+		{
+			name:            "replaces previous COMMITTED version",
+			sizeActual:      512,
+			lastModifiedMs:  1735689600000,
+			replaceExisting: true,
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+
+			ctx := context.Background()
+			db := openIsolatedDB(t)
+			s := store.NewObjectStore(db)
+
+			createdAt := time.Date(2025, time.January, 1, 12, 0, 0, 0, time.UTC)
+			bucketID := "bucket-id-commit"
+			cradleServerID := "cradle-id-commit"
+			objectID := "object-id-commit"
+
+			setupPrerequisites(ctx, t, db, bucketID, cradleServerID, createdAt, false, false)
+
+			priorObjectID := "object-id-prior"
+			if c.replaceExisting {
+				insertCommittedObject(ctx, t, db, priorObjectID, bucketID, "photos/sunset.jpg", cradleServerID, createdAt)
+			}
+
+			if !c.skipSetup {
+				_, err := s.CreatePending(ctx, objectID, bucketID, "photos/sunset.jpg", 1024, cradleServerID, createdAt)
+				if err != nil {
+					t.Fatalf("setup CreatePending: %v", err)
+				}
+			}
+
+			if c.preCommit {
+				insertCommittedObject(ctx, t, db, objectID, bucketID, "photos/sunset.jpg", cradleServerID, createdAt)
+			}
+
+			updatedAt := time.Now()
+			err := s.CommitWithReplace(ctx, objectID, c.sizeActual, c.lastModifiedMs, updatedAt)
+
+			if c.wantErr != nil {
+				if err == nil {
+					t.Fatalf("Commit: expected error %v, got nil", c.wantErr)
+				}
+				if !errors.Is(err, c.wantErr) {
+					t.Fatalf("Commit error: got %v, want %v", err, c.wantErr)
+				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("Commit: unexpected error: %v", err)
+			}
+
+			var (
+				storedState        string
+				storedSizeActual   sql.NullInt64
+				storedLastModified sql.NullInt64
+				storedUpdatedAt    int64
+			)
+
+			const q = `SELECT state, size_actual, last_modified, updated_at FROM objects WHERE object_id = ?`
+			if err := db.QueryRowContext(ctx, q, objectID).Scan(&storedState, &storedSizeActual, &storedLastModified, &storedUpdatedAt); err != nil {
+				t.Fatalf("query committed object: %v", err)
+			}
+
+			if storedState != "COMMITTED" {
+				t.Errorf("state: got %q, want %q", storedState, "COMMITTED")
+			}
+			if !storedSizeActual.Valid || storedSizeActual.Int64 != c.sizeActual {
+				t.Errorf("size_actual: got %v, want %d", storedSizeActual, c.sizeActual)
+			}
+			if !storedLastModified.Valid || storedLastModified.Int64 != c.lastModifiedMs {
+				t.Errorf("last_modified: got %v, want %d", storedLastModified, c.lastModifiedMs)
+			}
+
+			wantUpdatedAt := updatedAt.UTC().Truncate(time.Microsecond)
+			gotUpdatedAt := time.UnixMicro(storedUpdatedAt).UTC()
+			if !gotUpdatedAt.Equal(wantUpdatedAt) {
+				t.Errorf("updated_at: got %s, want %s", gotUpdatedAt, wantUpdatedAt)
+			}
+
+			if c.replaceExisting {
+				var priorState string
+				var priorUpdatedAt int64
+				if err := db.QueryRowContext(ctx, `SELECT state, updated_at FROM objects WHERE object_id = ?`, priorObjectID).Scan(&priorState, &priorUpdatedAt); err != nil {
+					t.Fatalf("query prior object: %v", err)
+				}
+				if priorState != "REPLACED" {
+					t.Errorf("prior object state: got %q, want %q", priorState, "REPLACED")
+				}
+				wantPriorUpdatedAt := updatedAt.UTC().Truncate(time.Microsecond)
+				gotPriorUpdatedAt := time.UnixMicro(priorUpdatedAt).UTC()
+				if !gotPriorUpdatedAt.Equal(wantPriorUpdatedAt) {
+					t.Errorf("prior object updated_at: got %s, want %s", gotPriorUpdatedAt, wantPriorUpdatedAt)
+				}
+
+				var committedCount int
+				if err := db.QueryRowContext(ctx, `SELECT COUNT(*) FROM objects WHERE bucket_id = ? AND key = ? AND state = 'COMMITTED'`, bucketID, "photos/sunset.jpg").Scan(&committedCount); err != nil {
+					t.Fatalf("count committed rows: %v", err)
+				}
+				if committedCount != 1 {
+					t.Errorf("committed rows for bucket+key: got %d, want 1", committedCount)
+				}
+			}
+		})
+	}
+}
+
+func insertCommittedObject(ctx context.Context, t *testing.T, db *sql.DB, objectID, bucketID, key, cradleServerID string, createdAt time.Time) {
+	t.Helper()
+	stamp := createdAt.UTC().Truncate(time.Microsecond).UnixMicro()
+	_, err := db.ExecContext(ctx, `
+		INSERT INTO objects (object_id, bucket_id, key, state, size_expected, size_actual, last_modified, cradle_server_id, created_at, updated_at)
+		VALUES (?, ?, ?, 'COMMITTED', 1024, 1024, ?, ?, ?, ?)
+	`, objectID, bucketID, key, stamp, cradleServerID, stamp, stamp)
+	if err != nil {
+		t.Fatalf("insertCommittedObject: %v", err)
 	}
 }
 

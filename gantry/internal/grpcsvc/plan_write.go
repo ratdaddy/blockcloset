@@ -28,7 +28,7 @@ func (s *Service) PlanWrite(ctx context.Context, req *servicev1.PlanWriteRequest
 
 	//Validate size is greater than zero
 	if size <= 0 {
-		return nil, status.Error(codes.InvalidArgument, "InvalidArgument")
+		return nil, status.Error(codes.InvalidArgument, "InvalidSize")
 	}
 
 	if size > maxPutBytes {

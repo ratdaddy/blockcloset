@@ -8,7 +8,7 @@ import (
 	"github.com/ratdaddy/blockcloset/gantry/internal/store"
 )
 
-// ObjectCreateCall captures the parameters for Create invocations.
+// ObjectCreateCall captures the parameters for CreatePending invocations.
 type ObjectCreateCall struct {
 	ID             string
 	BucketID       string
@@ -18,6 +18,14 @@ type ObjectCreateCall struct {
 	CreatedAt      time.Time
 }
 
+// ObjectCommitCall captures the parameters for CommitWithReplace invocations.
+type ObjectCommitCall struct {
+	ObjectID       string
+	SizeActual     int64
+	LastModifiedMs int64
+	UpdatedAt      time.Time
+}
+
 // ObjectStoreFake implements store.ObjectStore for tests.
 type ObjectStoreFake struct {
 	mu                sync.Mutex
@@ -25,6 +33,8 @@ type ObjectStoreFake struct {
 	createCalls       []ObjectCreateCall
 	createResponse    store.ObjectRecord
 	hasCreateResponse bool
+	commitErr         error
+	commitCalls       []ObjectCommitCall
 }
 
 var _ store.ObjectStore = (*ObjectStoreFake)(nil)
@@ -77,6 +87,32 @@ func (f *ObjectStoreFake) CreatePending(ctx context.Context, id, bucketID, key s
 		CreatedAt:      createdAt,
 		UpdatedAt:      createdAt,
 	}, nil
+}
+
+func (f *ObjectStoreFake) SetCommitError(err error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.commitErr = err
+}
+
+func (f *ObjectStoreFake) CommitWithReplace(ctx context.Context, objectID string, sizeActual int64, lastModifiedMs int64, updatedAt time.Time) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.commitCalls = append(f.commitCalls, ObjectCommitCall{
+		ObjectID:       objectID,
+		SizeActual:     sizeActual,
+		LastModifiedMs: lastModifiedMs,
+		UpdatedAt:      updatedAt,
+	})
+	return f.commitErr
+}
+
+func (f *ObjectStoreFake) CommitCalls() []ObjectCommitCall {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	calls := make([]ObjectCommitCall, len(f.commitCalls))
+	copy(calls, f.commitCalls)
+	return calls
 }
 
 func (f *ObjectStoreFake) Calls() []ObjectCreateCall {
