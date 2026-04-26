@@ -5,6 +5,7 @@ import (
 	"net"
 	"sync"
 	"testing"
+	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
@@ -194,6 +195,15 @@ func (s *captureGantryService) SetPlanWriteHook(fn func(context.Context, *servic
 	s.mu.Lock()
 	s.planWriteHookFn = fn
 	s.mu.Unlock()
+}
+
+func parseTime(t *testing.T, v string) time.Time {
+	t.Helper()
+	ts, err := time.Parse(time.RFC3339, v)
+	if err != nil {
+		t.Fatalf("parse time %q: %v", v, err)
+	}
+	return ts
 }
 
 func newTestClient(t *testing.T) (*Client, *captureGantryService) {

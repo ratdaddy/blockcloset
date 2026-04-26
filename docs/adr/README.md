@@ -33,7 +33,7 @@ ADRs here are being actively evaluated but no final decision has been made.
 
 | ADR # | Title | Summary |
 |-------|-------|---------|
-| *None currently* | | |
+| [0014](0014-grpc-client-wrapper-testing.md) | gRPC Client Wrapper Testing | Defines structure and coverage conventions for gRPC client wrapper tests: one file, flat tests, all three concerns per method. |
 
 ---
 
