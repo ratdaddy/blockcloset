@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
+	"github.com/ratdaddy/blockcloset/flatbed/internal/requestid"
 	bucketv1 "github.com/ratdaddy/blockcloset/proto/gen/gantry/bucket/v1"
 	servicev1 "github.com/ratdaddy/blockcloset/proto/gen/gantry/service/v1"
 )
@@ -14,69 +15,47 @@ import (
 func TestClientListBuckets(t *testing.T) {
 	t.Parallel()
 
-	type tc struct {
-		name        string
-		ctx         context.Context
-		setup       func(*captureGantryService)
-		wantBuckets []Bucket
-		wantErr     bool
-	}
+	client, svc := newTestClient(t)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	t.Cleanup(cancel)
 
-	cases := []tc{
-		{
-			name: "hydrates buckets from response",
-			ctx:  context.Background(),
-			setup: func(svc *captureGantryService) {
-				resp := &servicev1.ListBucketsResponse{
-					Buckets: []*bucketv1.Bucket{
-						{Name: "first", CreatedAtRfc3339: "2025-01-01T01:02:03Z"},
-						{Name: "second", CreatedAtRfc3339: "2025-01-02T04:05:06Z"},
-					},
-				}
-				svc.SetListBucketsHook(func(context.Context, *servicev1.ListBucketsRequest) (*servicev1.ListBucketsResponse, error) {
-					return resp, nil
-				})
+	svc.SetListBucketsHook(func(_ context.Context, _ *servicev1.ListBucketsRequest) (*servicev1.ListBucketsResponse, error) {
+		return &servicev1.ListBucketsResponse{
+			Buckets: []*bucketv1.Bucket{
+				{Name: "alpha", CreatedAtRfc3339: "2025-01-01T01:02:03Z"},
+				{Name: "beta", CreatedAtRfc3339: "2025-06-01T12:00:00Z"},
 			},
-			wantBuckets: []Bucket{
-				{Name: "first", CreatedAt: parseTime(t, "2025-01-01T01:02:03Z")},
-				{Name: "second", CreatedAt: parseTime(t, "2025-01-02T04:05:06Z")},
-			},
-		},
+		}, nil
+	})
+
+	want := []Bucket{
+		{Name: "alpha", CreatedAt: parseTime(t, "2025-01-01T01:02:03Z")},
+		{Name: "beta", CreatedAt: parseTime(t, "2025-06-01T12:00:00Z")},
 	}
 
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-
-			client, svc := newTestClient(t)
-			if tc.setup != nil {
-				tc.setup(svc)
-			}
-
-			out, err := client.ListBuckets(tc.ctx)
-			if tc.wantErr {
-				if err == nil {
-					t.Fatalf("ListBuckets: expected error, got nil")
-				}
-				return
-			}
-
-			if err != nil {
-				t.Fatalf("ListBuckets: %v", err)
-			}
-
-			if diff := cmp.Diff(tc.wantBuckets, out); diff != "" {
-				t.Fatalf("ListBuckets diff (-want +got):\n%s", diff)
-			}
-		})
-	}
-}
-
-func parseTime(t *testing.T, v string) time.Time {
-	t.Helper()
-	ts, err := time.Parse(time.RFC3339, v)
+	got, err := client.ListBuckets(requestid.WithRequestID(ctx, "req-abc"))
 	if err != nil {
-		t.Fatalf("parse time %q: %v", v, err)
+		t.Fatalf("ListBuckets: %v", err)
 	}
-	return ts
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Fatalf("ListBuckets diff (-want +got):\n%s", diff)
+	}
+
+	call, ok := svc.LastListBucketsCall()
+	if !ok {
+		t.Fatal("no ListBuckets call recorded")
+	}
+	if meta := call.Metadata.Get("x-request-id"); len(meta) != 1 || meta[0] != "req-abc" {
+		t.Fatalf("x-request-id = %v, want [req-abc]", meta)
+	}
+
+	svc.Reset()
+
+	if _, err := client.ListBuckets(ctx); err != nil {
+		t.Fatalf("ListBuckets (no request id): %v", err)
+	}
+	call, _ = svc.LastListBucketsCall()
+	if meta := call.Metadata.Get("x-request-id"); len(meta) != 0 {
+		t.Fatalf("x-request-id without id = %v, want []", meta)
+	}
 }

@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 	"time"
+
+	"github.com/ratdaddy/blockcloset/flatbed/internal/requestid"
 )
 
 func TestClientCreateBucket(t *testing.T) {
@@ -13,23 +15,34 @@ func TestClientCreateBucket(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	t.Cleanup(cancel)
 
-	const bucketName = "client-create-bucket"
+	const name = "test-bucket"
 
-	gotName, err := client.CreateBucket(ctx, bucketName)
+	gotName, err := client.CreateBucket(requestid.WithRequestID(ctx, "req-abc"), name)
 	if err != nil {
 		t.Fatalf("CreateBucket: %v", err)
 	}
-
-	if gotName != bucketName {
-		t.Fatalf("CreateBucket returned %q, want %q", gotName, bucketName)
+	if gotName != name {
+		t.Fatalf("CreateBucket returned %q, want %q", gotName, name)
 	}
 
-	calls := svc.CreateBucketCalls()
-	if len(calls) != 1 {
-		t.Fatalf("CreateBucket call count = %d, want 1", len(calls))
+	call, ok := svc.LastCreateBucketCall()
+	if !ok {
+		t.Fatal("no CreateBucket call recorded")
+	}
+	if call.Request.GetName() != name {
+		t.Fatalf("request Name = %q, want %q", call.Request.GetName(), name)
+	}
+	if meta := call.Metadata.Get("x-request-id"); len(meta) != 1 || meta[0] != "req-abc" {
+		t.Fatalf("x-request-id = %v, want [req-abc]", meta)
 	}
 
-	if calls[0].Request.GetName() != bucketName {
-		t.Fatalf("CreateBucket request Name = %q, want %q", calls[0].Request.GetName(), bucketName)
+	svc.Reset()
+
+	if _, err := client.CreateBucket(ctx, name); err != nil {
+		t.Fatalf("CreateBucket (no request id): %v", err)
+	}
+	call, _ = svc.LastCreateBucketCall()
+	if meta := call.Metadata.Get("x-request-id"); len(meta) != 0 {
+		t.Fatalf("x-request-id without id = %v, want []", meta)
 	}
 }

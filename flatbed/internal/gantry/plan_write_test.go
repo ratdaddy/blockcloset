@@ -4,6 +4,10 @@ import (
 	"context"
 	"testing"
 	"time"
+
+	"github.com/ratdaddy/blockcloset/flatbed/internal/requestid"
+	servicev1 "github.com/ratdaddy/blockcloset/proto/gen/gantry/service/v1"
+	writeplanv1 "github.com/ratdaddy/blockcloset/proto/gen/gantry/write_plan/v1"
 )
 
 func TestClientPlanWrite(t *testing.T) {
@@ -13,43 +17,56 @@ func TestClientPlanWrite(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	t.Cleanup(cancel)
 
+	svc.SetPlanWriteHook(func(_ context.Context, _ *servicev1.PlanWriteRequest) (*servicev1.PlanWriteResponse, error) {
+		return &servicev1.PlanWriteResponse{
+			WritePlan: &writeplanv1.WritePlan{
+				ObjectId:      "01JXXXXXXXXXXXXXXXXXXXXXXXXX",
+				CradleAddress: "cradle.internal:9002",
+			},
+		}, nil
+	})
+
 	const (
-		bucket = "test-bucket"
-		key    = "test-key.txt"
-		size   = int64(1024)
+		bucket = "photos"
+		key    = "vacation/sunset.jpg"
+		size   = int64(204800)
 	)
 
-	writePlan, err := client.PlanWrite(ctx, bucket, key, size)
+	plan, err := client.PlanWrite(requestid.WithRequestID(ctx, "req-abc"), bucket, key, size)
 	if err != nil {
 		t.Fatalf("PlanWrite: %v", err)
 	}
-
-	if writePlan == nil {
-		t.Fatal("PlanWrite returned nil WritePlan")
+	if plan.GetObjectId() != "01JXXXXXXXXXXXXXXXXXXXXXXXXX" {
+		t.Fatalf("ObjectId = %q, want %q", plan.GetObjectId(), "01JXXXXXXXXXXXXXXXXXXXXXXXXX")
+	}
+	if plan.GetCradleAddress() != "cradle.internal:9002" {
+		t.Fatalf("CradleAddress = %q, want %q", plan.GetCradleAddress(), "cradle.internal:9002")
 	}
 
-	if writePlan.GetObjectId() == "" {
-		t.Fatal("PlanWrite returned empty objectID")
+	call, ok := svc.LastPlanWriteCall()
+	if !ok {
+		t.Fatal("no PlanWrite call recorded")
+	}
+	if call.Request.GetBucket() != bucket {
+		t.Fatalf("request Bucket = %q, want %q", call.Request.GetBucket(), bucket)
+	}
+	if call.Request.GetKey() != key {
+		t.Fatalf("request Key = %q, want %q", call.Request.GetKey(), key)
+	}
+	if call.Request.GetSize() != size {
+		t.Fatalf("request Size = %d, want %d", call.Request.GetSize(), size)
+	}
+	if meta := call.Metadata.Get("x-request-id"); len(meta) != 1 || meta[0] != "req-abc" {
+		t.Fatalf("x-request-id = %v, want [req-abc]", meta)
 	}
 
-	if writePlan.GetCradleAddress() == "" {
-		t.Fatal("PlanWrite returned empty cradleAddress")
-	}
+	svc.Reset()
 
-	calls := svc.PlanWriteCalls()
-	if len(calls) != 1 {
-		t.Fatalf("PlanWrite call count = %d, want 1", len(calls))
+	if _, err := client.PlanWrite(ctx, bucket, key, size); err != nil {
+		t.Fatalf("PlanWrite (no request id): %v", err)
 	}
-
-	if calls[0].Request.GetBucket() != bucket {
-		t.Fatalf("PlanWrite request Bucket = %q, want %q", calls[0].Request.GetBucket(), bucket)
-	}
-
-	if calls[0].Request.GetKey() != key {
-		t.Fatalf("PlanWrite request Key = %q, want %q", calls[0].Request.GetKey(), key)
-	}
-
-	if calls[0].Request.GetSize() != size {
-		t.Fatalf("PlanWrite request Size = %d, want %d", calls[0].Request.GetSize(), size)
+	call, _ = svc.LastPlanWriteCall()
+	if meta := call.Metadata.Get("x-request-id"); len(meta) != 0 {
+		t.Fatalf("x-request-id without id = %v, want []", meta)
 	}
 }
