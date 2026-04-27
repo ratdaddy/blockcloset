@@ -45,10 +45,11 @@ Each method test must verify:
    proto request is asserted on the captured call.
 2. **Response mapping** — every field the method maps from the proto response to
    its return value is asserted, confirming correct hydration.
-3. **Request ID propagation** — the test makes two calls: one with a request ID
-   in the context (asserts `x-request-id` metadata is present and correct) and
-   one without (asserts `x-request-id` metadata is absent). There is no separate
-   test file for the interceptor.
+3. **Request ID propagation** — the single call uses a request ID context (via
+   `requestid.WithRequestID`), and the test asserts `x-request-id` metadata is
+   present and correct on the captured call. The absent direction is not tested
+   per method; the interceptor is shared infrastructure and the present-direction
+   assertion is sufficient to confirm it is wired.
 
 ### Fake defaults return meaningful non-zero values
 
@@ -94,5 +95,3 @@ tests that need specific field values).
 
 - [ADR 0012](0012-error-testing-only-for-transformations.md) — error testing scope
 - [ADR 0010](0010-adoption-of-grpc-for-control-plane-api.md) — gRPC adoption
-- `flatbed/internal/gantry/client_test.go`
-- `flatbed/internal/cradle/write_object_test.go`

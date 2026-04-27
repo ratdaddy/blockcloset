@@ -14,6 +14,7 @@ type GantryClient interface {
 	CreateBucket(ctx context.Context, name string) (string, error)
 	ListBuckets(ctx context.Context) ([]gantry.Bucket, error)
 	PlanWrite(ctx context.Context, bucket, key string, size int64) (*writeplanv1.WritePlan, error)
+	CommitObject(ctx context.Context, objectID string, size int64, lastModifiedMs int64) error
 }
 
 // CradleClient defines the operations needed from the Cradle service.

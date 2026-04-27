@@ -12,7 +12,7 @@ import (
 )
 
 type Client struct {
-	buckets servicev1.GantryServiceClient
+	svc servicev1.GantryServiceClient
 	cc      *grpc.ClientConn
 }
 
@@ -29,7 +29,7 @@ func New(ctx context.Context, address string, opts ...grpc.DialOption) (*Client,
 	if err != nil {
 		return nil, err
 	}
-	return &Client{buckets: servicev1.NewGantryServiceClient(cc), cc: cc}, nil
+	return &Client{svc: servicev1.NewGantryServiceClient(cc), cc: cc}, nil
 }
 
 func requestIDUnaryInterceptor() grpc.UnaryClientInterceptor {

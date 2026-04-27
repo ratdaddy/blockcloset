@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 	"strconv"
+	"time"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -79,20 +80,26 @@ func (h *Handlers) PutObject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logger.LogWritePlan(r, writePlan.GetObjectId(), writePlan.GetCradleAddress(), contentLength)
+	objectID := writePlan.GetObjectId()
+	cradleAddress := writePlan.GetCradleAddress()
+
+	logger.LogWritePlan(r, objectID, cradleAddress, contentLength)
 
 	// Stream request body to Cradle
-	bytesWritten, _, err := h.Cradle.WriteObject(r.Context(), writePlan.GetCradleAddress(), writePlan.GetObjectId(), bucket, contentLength, r.Body)
-	if err != nil {
-		respond.Error(w, r, "InternalError", http.StatusInternalServerError)
-		return
-	}
+	bytesWritten, lastModifiedMs, err := h.Cradle.WriteObject(r.Context(), cradleAddress, objectID, bucket, contentLength, r.Body)
 
 	// Validate bytes written matches expected size
-	if bytesWritten != contentLength {
+	if err != nil || bytesWritten != contentLength {
 		respond.Error(w, r, "InternalError", http.StatusInternalServerError)
 		return
 	}
 
+	if err := h.Gantry.CommitObject(r.Context(), objectID, bytesWritten, lastModifiedMs); err != nil {
+		respond.Error(w, r, "InternalError", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("ETag", `"`+objectID+`"`)
+	w.Header().Set("Last-Modified", time.UnixMilli(lastModifiedMs).UTC().Format(time.RFC1123))
 	w.WriteHeader(http.StatusOK)
 }
