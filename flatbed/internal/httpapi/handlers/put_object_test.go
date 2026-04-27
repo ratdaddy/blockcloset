@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -269,6 +270,7 @@ func TestPutObject_CradleIntegration(t *testing.T) {
 		wantCradleSize     int64
 		wantCradleBody     string
 		wantBodySubstr     string
+		wantCommitCalls    int
 	}
 
 	cases := []tc{
@@ -289,6 +291,7 @@ func TestPutObject_CradleIntegration(t *testing.T) {
 			wantCradleBucket:  "photos",
 			wantCradleSize:    17,
 			wantCradleBody:    "test file content",
+			wantCommitCalls:   1,
 		},
 		{
 			name:          "cradle write failure returns 500",
@@ -309,6 +312,7 @@ func TestPutObject_CradleIntegration(t *testing.T) {
 			wantCradleSize:    17,
 			wantCradleBody:    "test file content",
 			wantBodySubstr:    "InternalError",
+			wantCommitCalls:   0,
 		},
 		{
 			name:               "size mismatch returns 500",
@@ -329,6 +333,7 @@ func TestPutObject_CradleIntegration(t *testing.T) {
 			wantCradleSize:     17,
 			wantCradleBody:     "test file content",
 			wantBodySubstr:     "InternalError",
+			wantCommitCalls:    0,
 		},
 	}
 
@@ -396,10 +401,102 @@ func TestPutObject_CradleIntegration(t *testing.T) {
 				}
 			}
 
+			if got := gantryStub.CommitObjectCount(); got != c.wantCommitCalls {
+				t.Fatalf("CommitObject call count: got %d, want %d", got, c.wantCommitCalls)
+			}
+
 			if c.wantBodySubstr != "" {
 				body, _ := io.ReadAll(rec.Body)
 				if !strings.Contains(string(body), c.wantBodySubstr) {
 					t.Fatalf("body: expected substring %q, got %q", c.wantBodySubstr, string(body))
+				}
+			}
+		})
+	}
+}
+
+func TestPutObject_CommitObject(t *testing.T) {
+	t.Parallel()
+
+	type tc struct {
+		name           string
+		commitErr      error
+		wantStatus     int
+		wantBodySubstr string
+	}
+
+	cases := []tc{
+		{
+			name:       "successful commit returns 200",
+			wantStatus: http.StatusOK,
+		},
+		{
+			name:           "commit failure returns 500",
+			commitErr:      errors.New("gantry unavailable"),
+			wantStatus:     http.StatusInternalServerError,
+			wantBodySubstr: "InternalError",
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+
+			gantryStub := testutil.NewGantryStub()
+			cradleStub := testutil.NewCradleStub()
+
+			if c.commitErr != nil {
+				gantryStub.CommitObjectFn = func(context.Context, string, int64, int64) error {
+					return c.commitErr
+				}
+			}
+
+			h := &handlers.Handlers{
+				BucketValidator: validation.DefaultBucketNameValidator{},
+				KeyValidator:    validation.DefaultKeyValidator{},
+				Gantry:          gantryStub,
+				Cradle:          cradleStub,
+			}
+
+			req := httptest.NewRequest(http.MethodPut, "/", strings.NewReader("test file content"))
+			req.SetPathValue("bucket", "photos")
+			req.SetPathValue("key", "vacation.jpg")
+			req.Header.Set("Content-Length", "17")
+			rec := httptest.NewRecorder()
+
+			h.PutObject(rec, req)
+
+			if rec.Code != c.wantStatus {
+				t.Fatalf("status: got %d, want %d", rec.Code, c.wantStatus)
+			}
+
+			if c.wantStatus == http.StatusOK {
+				if got := gantryStub.CommitObjectCount(); got != 1 {
+					t.Fatalf("CommitObject call count: got %d, want 1", got)
+				}
+				call := gantryStub.CommitObjectCalls[0]
+				if call.ObjectID != "stub-object-id" {
+					t.Fatalf("CommitObject ObjectID: got %q, want %q", call.ObjectID, "stub-object-id")
+				}
+				if call.Size != 17 {
+					t.Fatalf("CommitObject Size: got %d, want 17", call.Size)
+				}
+				if call.LastModifiedMs != 1234567890 {
+					t.Fatalf("CommitObject LastModifiedMs: got %d, want 1234567890", call.LastModifiedMs)
+				}
+				if got := rec.Header().Get("ETag"); got != `"stub-object-id"` {
+					t.Fatalf("ETag: got %q, want %q", got, `"stub-object-id"`)
+				}
+				wantLastModified := time.UnixMilli(1234567890).UTC().Format(time.RFC1123)
+				if got := rec.Header().Get("Last-Modified"); got != wantLastModified {
+					t.Fatalf("Last-Modified: got %q, want %q", got, wantLastModified)
+				}
+			}
+
+			if c.wantBodySubstr != "" {
+				body, _ := io.ReadAll(rec.Body)
+				if !strings.Contains(string(body), c.wantBodySubstr) {
+					t.Fatalf("body: expected %q, got %q", c.wantBodySubstr, string(body))
 				}
 			}
 		})

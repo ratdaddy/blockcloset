@@ -8,7 +8,7 @@ import (
 )
 
 func (c *Client) PlanWrite(ctx context.Context, bucket, key string, size int64) (*writeplanv1.WritePlan, error) {
-	resp, err := c.buckets.PlanWrite(ctx, &servicev1.PlanWriteRequest{
+	resp, err := c.svc.PlanWrite(ctx, &servicev1.PlanWriteRequest{
 		Bucket: bucket,
 		Key:    key,
 		Size:   size,

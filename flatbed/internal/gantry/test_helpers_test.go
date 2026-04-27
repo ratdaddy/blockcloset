@@ -34,16 +34,22 @@ type planWriteCall struct {
 	Request  *servicev1.PlanWriteRequest
 }
 
+type commitObjectCall struct {
+	Metadata metadata.MD
+	Request  *servicev1.CommitObjectRequest
+}
+
 type captureGantryService struct {
 	servicev1.UnimplementedGantryServiceServer
 
-	mu                 sync.Mutex
-	createBucketCalls  []createBucketCall
-	createBucketHookFn func(context.Context, *servicev1.CreateBucketRequest) (*servicev1.CreateBucketResponse, error)
-	listBucketCalls    []listBucketsCall
-	listBucketHookFn   func(context.Context, *servicev1.ListBucketsRequest) (*servicev1.ListBucketsResponse, error)
-	planWriteCalls     []planWriteCall
-	planWriteHookFn    func(context.Context, *servicev1.PlanWriteRequest) (*servicev1.PlanWriteResponse, error)
+	mu                  sync.Mutex
+	createBucketCalls   []createBucketCall
+	createBucketHookFn  func(context.Context, *servicev1.CreateBucketRequest) (*servicev1.CreateBucketResponse, error)
+	listBucketCalls     []listBucketsCall
+	listBucketHookFn    func(context.Context, *servicev1.ListBucketsRequest) (*servicev1.ListBucketsResponse, error)
+	planWriteCalls      []planWriteCall
+	planWriteHookFn     func(context.Context, *servicev1.PlanWriteRequest) (*servicev1.PlanWriteResponse, error)
+	commitObjectCalls   []commitObjectCall
 }
 
 func newCaptureGantryService() *captureGantryService {
@@ -55,6 +61,7 @@ func (s *captureGantryService) Reset() {
 	s.createBucketCalls = nil
 	s.listBucketCalls = nil
 	s.planWriteCalls = nil
+	s.commitObjectCalls = nil
 	s.mu.Unlock()
 }
 
@@ -195,6 +202,31 @@ func (s *captureGantryService) SetPlanWriteHook(fn func(context.Context, *servic
 	s.mu.Lock()
 	s.planWriteHookFn = fn
 	s.mu.Unlock()
+}
+
+func (s *captureGantryService) CommitObject(ctx context.Context, req *servicev1.CommitObjectRequest) (*servicev1.CommitObjectResponse, error) {
+	call := commitObjectCall{
+		Request: proto.Clone(req).(*servicev1.CommitObjectRequest),
+	}
+
+	if md, ok := metadata.FromIncomingContext(ctx); ok {
+		call.Metadata = md.Copy()
+	}
+
+	s.mu.Lock()
+	s.commitObjectCalls = append(s.commitObjectCalls, call)
+	s.mu.Unlock()
+
+	return &servicev1.CommitObjectResponse{}, nil
+}
+
+func (s *captureGantryService) LastCommitObjectCall() (commitObjectCall, bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if len(s.commitObjectCalls) == 0 {
+		return commitObjectCall{}, false
+	}
+	return s.commitObjectCalls[len(s.commitObjectCalls)-1], true
 }
 
 func parseTime(t *testing.T, v string) time.Time {

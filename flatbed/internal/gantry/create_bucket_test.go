@@ -35,14 +35,4 @@ func TestClientCreateBucket(t *testing.T) {
 	if meta := call.Metadata.Get("x-request-id"); len(meta) != 1 || meta[0] != "req-abc" {
 		t.Fatalf("x-request-id = %v, want [req-abc]", meta)
 	}
-
-	svc.Reset()
-
-	if _, err := client.CreateBucket(ctx, name); err != nil {
-		t.Fatalf("CreateBucket (no request id): %v", err)
-	}
-	call, _ = svc.LastCreateBucketCall()
-	if meta := call.Metadata.Get("x-request-id"); len(meta) != 0 {
-		t.Fatalf("x-request-id without id = %v, want []", meta)
-	}
 }

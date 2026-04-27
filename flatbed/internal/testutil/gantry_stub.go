@@ -13,13 +13,21 @@ type PlanWriteCall struct {
 	Size   int64
 }
 
+type CommitObjectCall struct {
+	ObjectID       string
+	Size           int64
+	LastModifiedMs int64
+}
+
 type GantryStub struct {
-	CreateFn       func(context.Context, string) (string, error)
-	ListFn         func(context.Context) ([]gantry.Bucket, error)
-	PlanWriteFn    func(context.Context, string, string, int64) (*writeplanv1.WritePlan, error)
-	CreateCalls    []string
-	ListCalls      int
-	PlanWriteCalls []PlanWriteCall
+	CreateFn          func(context.Context, string) (string, error)
+	ListFn            func(context.Context) ([]gantry.Bucket, error)
+	PlanWriteFn       func(context.Context, string, string, int64) (*writeplanv1.WritePlan, error)
+	CommitObjectFn    func(context.Context, string, int64, int64) error
+	CreateCalls       []string
+	ListCalls         int
+	PlanWriteCalls    []PlanWriteCall
+	CommitObjectCalls []CommitObjectCall
 }
 
 func NewGantryStub() *GantryStub {
@@ -38,6 +46,10 @@ func (g *GantryStub) PlanWriteCount() int {
 	return len(g.PlanWriteCalls)
 }
 
+func (g *GantryStub) CommitObjectCount() int {
+	return len(g.CommitObjectCalls)
+}
+
 func (g *GantryStub) CreateBucket(ctx context.Context, name string) (string, error) {
 	g.CreateCalls = append(g.CreateCalls, name)
 	if g.CreateFn != nil {
@@ -52,6 +64,18 @@ func (g *GantryStub) ListBuckets(ctx context.Context) ([]gantry.Bucket, error) {
 		return g.ListFn(ctx)
 	}
 	return nil, nil
+}
+
+func (g *GantryStub) CommitObject(ctx context.Context, objectID string, size int64, lastModifiedMs int64) error {
+	g.CommitObjectCalls = append(g.CommitObjectCalls, CommitObjectCall{
+		ObjectID:       objectID,
+		Size:           size,
+		LastModifiedMs: lastModifiedMs,
+	})
+	if g.CommitObjectFn != nil {
+		return g.CommitObjectFn(ctx, objectID, size, lastModifiedMs)
+	}
+	return nil
 }
 
 func (g *GantryStub) PlanWrite(ctx context.Context, bucket, key string, size int64) (*writeplanv1.WritePlan, error) {

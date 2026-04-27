@@ -8,7 +8,7 @@ import (
 )
 
 func (c *Client) ListBuckets(ctx context.Context) ([]Bucket, error) {
-	resp, err := c.buckets.ListBuckets(ctx, &servicev1.ListBucketsRequest{})
+	resp, err := c.svc.ListBuckets(ctx, &servicev1.ListBucketsRequest{})
 	if err != nil {
 		return nil, err
 	}

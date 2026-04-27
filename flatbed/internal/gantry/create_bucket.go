@@ -7,7 +7,7 @@ import (
 )
 
 func (c *Client) CreateBucket(ctx context.Context, name string) (string, error) {
-	resp, err := c.buckets.CreateBucket(ctx, &servicev1.CreateBucketRequest{Name: name})
+	resp, err := c.svc.CreateBucket(ctx, &servicev1.CreateBucketRequest{Name: name})
 	if err != nil {
 		return "", err
 	}
