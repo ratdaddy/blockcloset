@@ -174,6 +174,9 @@ Grpcurl exampe to run directly with cradle:
 grpcurl -plaintext $CRADLE_ADDR list cradle.service.v1.CradleService
 grpcurl -plaintext $CRADLE_ADDR describe cradle.service.v1.CradleService.WriteObject
 
+# heartbeat (returns available bytes on the cradle's storage volume):
+grpcurl -plaintext $CRADLE_ADDR cradle.service.v1.CradleService/Heartbeat
+
 # successful write object
 cat <<'EOF' | \
 grpcurl -plaintext -d @ $CRADLE_ADDR cradle.service.v1.CradleService/WriteObject

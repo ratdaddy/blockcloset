@@ -27,6 +27,11 @@ func main() {
 	config.Init()
 	logger.Init()
 
+	if err := os.MkdirAll(config.ObjectsRoot, 0755); err != nil {
+		slog.Error("failed to create objects root", "path", config.ObjectsRoot, "err", err)
+		os.Exit(1)
+	}
+
 	addr := fmt.Sprintf(":%d", config.CradlePort)
 
 	slog.Info("starting cradle", "addr", addr)

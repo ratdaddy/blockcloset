@@ -16,7 +16,7 @@ type Writer struct {
 // NewWriter creates a new Writer for the given bucket and object ID.
 func NewWriter(objectsRoot, bucket, objectID string) (*Writer, error) {
 	bucketDir := filepath.Join(objectsRoot, bucket)
-	if err := os.MkdirAll(bucketDir, 0755); err != nil {
+	if err := os.Mkdir(bucketDir, 0755); err != nil && !os.IsExist(err) {
 		return nil, err
 	}
 
