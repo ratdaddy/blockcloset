@@ -1,14 +1,19 @@
 # Repository Guidelines
 
+@~/.claude/process/planning-workflow.md
+@.claude/process/development-workflow.md
+
 ## Service Topology
 
 - **Flatbed** — public HTTP API and future admin UI; the only component clients talk to directly.
 - **Gantry** — control plane; manages metadata, cluster membership, and replication policy.
 - **Cradle** — storage nodes; store and serve raw object data as blocks on local disks.
 
-Request flow: client → flatbed (HTTP) → gantry (gRPC, metadata/coordination) → cradle (gRPC, blob writes/reads).
+All three services share the same layout: `cmd/<service>/` for entrypoints, `internal/` for domain logic.
 
-All three services share the same layout: `cmd/<service>/` for entrypoints, `internal/` for domain logic. Flatbed holds gRPC client wrappers for gantry (`flatbed/internal/gantry`) and cradle (`flatbed/internal/cradle`).
+Object put/get: client → flatbed (HTTP) → gantry (gRPC, resolve which cradle nodes to use) → flatbed → cradle (gRPC, blob write/read). Flatbed is the hub and holds client wrappers for both (`flatbed/internal/gantry`, `flatbed/internal/cradle`).
+
+Cluster management: gantry calls cradle directly for heartbeats and other cluster concerns, and will hold its own client wrapper for cradle (`gantry/internal/cradle`).
 
 ## Project Structure
 
@@ -16,11 +21,14 @@ All three services share the same layout: `cmd/<service>/` for entrypoints, `int
 - `gantry/` — control plane
 - `cradle/` — block storage nodes
 - `proto/` — shared protobuf contracts; generated Go under `proto/gen/`
-- `loggrpc/` — gRPC logging utilities; intended to become an open-sourced structured-logging library (similar in intent to go-chi/httplog)
+- `loggrpc/` — gRPC logging utilities; intended to become an open-sourced structured-logging library
 
-## Architecture
+## Documentation
 
-- Significant decisions are documented as ADRs in `docs/adr/`. Refer to them when making design choices and suggest creating a new ADR when a significant decision arises.
+- **Architecture decisions** — `docs/adr/`; consult before making significant design choices;
+  suggest a new ADR when a decision point is reached
+- **Design references** — `docs/design/`; system structure, data models, interfaces
+- **Planning** — `docs/initiatives/`; active initiatives, plans, and ROADMAP
 
 ## Environment & Configuration
 
@@ -37,16 +45,3 @@ All three services share the same layout: `cmd/<service>/` for entrypoints, `int
 ## API Semantics
 
 - Mirror AWS S3 responses: gantry `codes.Internal` → HTTP 500 `InternalError`; reserve 503 for retryable outages, 504 for timeouts.
-
-## Testing
-
-- Favor interface fakes over network calls.
-- Do not ship new production behavior without a failing test in place unless explicitly approved.
-- After writing a new test, do not write the production code until told to do so.
-- Follow an interleaved TDD loop: one failing test → minimal code to pass → next test. Keep each pair small enough to review at each increment.
-- For gRPC client wrapper tests, follow the pattern in `docs/adr/0014-grpc-client-wrapper-testing.md`.
-
-## Coding Guardrails
-
-- Never remove files without explicit approval.
-- When editing files that contain user changes, assume those edits are intentional and preserve them unless told otherwise.
