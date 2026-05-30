@@ -5,6 +5,7 @@ option go_package = "github.com/ratdaddy/blockcloset/proto/gen/go/cradle/service
 
 service CradleService {
   rpc WriteObject(stream WriteObjectRequest) returns (WriteObjectResponse);
+  rpc Heartbeat(HeartbeatRequest) returns (HeartbeatResponse);
 }
 
 message WriteObjectRequest {
@@ -23,4 +24,11 @@ message WriteObjectMetadata {
 message WriteObjectResponse {
   int64 bytes_written = 1;
   int64 committed_at_ms = 2;
+}
+
+message HeartbeatRequest {}
+
+message HeartbeatResponse {
+  int64 available_bytes = 1;
+  reserved 2 to 10;
 }

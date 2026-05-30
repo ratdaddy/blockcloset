@@ -215,6 +215,86 @@ func (x *WriteObjectResponse) GetCommittedAtMs() int64 {
 	return 0
 }
 
+type HeartbeatRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *HeartbeatRequest) Reset() {
+	*x = HeartbeatRequest{}
+	mi := &file_cradle_service_v1_service_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *HeartbeatRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*HeartbeatRequest) ProtoMessage() {}
+
+func (x *HeartbeatRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_cradle_service_v1_service_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use HeartbeatRequest.ProtoReflect.Descriptor instead.
+func (*HeartbeatRequest) Descriptor() ([]byte, []int) {
+	return file_cradle_service_v1_service_proto_rawDescGZIP(), []int{3}
+}
+
+type HeartbeatResponse struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	AvailableBytes int64                  `protobuf:"varint,1,opt,name=available_bytes,json=availableBytes,proto3" json:"available_bytes,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *HeartbeatResponse) Reset() {
+	*x = HeartbeatResponse{}
+	mi := &file_cradle_service_v1_service_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *HeartbeatResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*HeartbeatResponse) ProtoMessage() {}
+
+func (x *HeartbeatResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_cradle_service_v1_service_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use HeartbeatResponse.ProtoReflect.Descriptor instead.
+func (*HeartbeatResponse) Descriptor() ([]byte, []int) {
+	return file_cradle_service_v1_service_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *HeartbeatResponse) GetAvailableBytes() int64 {
+	if x != nil {
+		return x.AvailableBytes
+	}
+	return 0
+}
+
 var File_cradle_service_v1_service_proto protoreflect.FileDescriptor
 
 const file_cradle_service_v1_service_proto_rawDesc = "" +
@@ -230,9 +310,13 @@ const file_cradle_service_v1_service_proto_rawDesc = "" +
 	"\x04size\x18\x03 \x01(\x03R\x04size\"b\n" +
 	"\x13WriteObjectResponse\x12#\n" +
 	"\rbytes_written\x18\x01 \x01(\x03R\fbytesWritten\x12&\n" +
-	"\x0fcommitted_at_ms\x18\x02 \x01(\x03R\rcommittedAtMs2o\n" +
+	"\x0fcommitted_at_ms\x18\x02 \x01(\x03R\rcommittedAtMs\"\x12\n" +
+	"\x10HeartbeatRequest\"B\n" +
+	"\x11HeartbeatResponse\x12'\n" +
+	"\x0favailable_bytes\x18\x01 \x01(\x03R\x0eavailableBytesJ\x04\b\x02\x10\v2\xc7\x01\n" +
 	"\rCradleService\x12^\n" +
-	"\vWriteObject\x12%.cradle.service.v1.WriteObjectRequest\x1a&.cradle.service.v1.WriteObjectResponse(\x01B\xd2\x01\n" +
+	"\vWriteObject\x12%.cradle.service.v1.WriteObjectRequest\x1a&.cradle.service.v1.WriteObjectResponse(\x01\x12V\n" +
+	"\tHeartbeat\x12#.cradle.service.v1.HeartbeatRequest\x1a$.cradle.service.v1.HeartbeatResponseB\xd2\x01\n" +
 	"\x15com.cradle.service.v1B\fServiceProtoP\x01ZEgithub.com/ratdaddy/blockcloset/proto/gen/cradle/service/v1;servicev1\xa2\x02\x03CSX\xaa\x02\x11Cradle.Service.V1\xca\x02\x11Cradle\\Service\\V1\xe2\x02\x1dCradle\\Service\\V1\\GPBMetadata\xea\x02\x13Cradle::Service::V1b\x06proto3"
 
 var (
@@ -247,18 +331,22 @@ func file_cradle_service_v1_service_proto_rawDescGZIP() []byte {
 	return file_cradle_service_v1_service_proto_rawDescData
 }
 
-var file_cradle_service_v1_service_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_cradle_service_v1_service_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_cradle_service_v1_service_proto_goTypes = []any{
 	(*WriteObjectRequest)(nil),  // 0: cradle.service.v1.WriteObjectRequest
 	(*WriteObjectMetadata)(nil), // 1: cradle.service.v1.WriteObjectMetadata
 	(*WriteObjectResponse)(nil), // 2: cradle.service.v1.WriteObjectResponse
+	(*HeartbeatRequest)(nil),    // 3: cradle.service.v1.HeartbeatRequest
+	(*HeartbeatResponse)(nil),   // 4: cradle.service.v1.HeartbeatResponse
 }
 var file_cradle_service_v1_service_proto_depIdxs = []int32{
 	1, // 0: cradle.service.v1.WriteObjectRequest.metadata:type_name -> cradle.service.v1.WriteObjectMetadata
 	0, // 1: cradle.service.v1.CradleService.WriteObject:input_type -> cradle.service.v1.WriteObjectRequest
-	2, // 2: cradle.service.v1.CradleService.WriteObject:output_type -> cradle.service.v1.WriteObjectResponse
-	2, // [2:3] is the sub-list for method output_type
-	1, // [1:2] is the sub-list for method input_type
+	3, // 2: cradle.service.v1.CradleService.Heartbeat:input_type -> cradle.service.v1.HeartbeatRequest
+	2, // 3: cradle.service.v1.CradleService.WriteObject:output_type -> cradle.service.v1.WriteObjectResponse
+	4, // 4: cradle.service.v1.CradleService.Heartbeat:output_type -> cradle.service.v1.HeartbeatResponse
+	3, // [3:5] is the sub-list for method output_type
+	1, // [1:3] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name
 	1, // [1:1] is the sub-list for extension extendee
 	0, // [0:1] is the sub-list for field type_name
@@ -279,7 +367,7 @@ func file_cradle_service_v1_service_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_cradle_service_v1_service_proto_rawDesc), len(file_cradle_service_v1_service_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   3,
+			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
