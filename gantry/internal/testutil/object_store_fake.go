@@ -115,7 +115,7 @@ func (f *ObjectStoreFake) CommitCalls() []ObjectCommitCall {
 	return calls
 }
 
-func (f *ObjectStoreFake) Calls() []ObjectCreateCall {
+func (f *ObjectStoreFake) CreatePendingCalls() []ObjectCreateCall {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 

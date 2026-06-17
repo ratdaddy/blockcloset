@@ -20,6 +20,18 @@ New gRPC client wrappers must follow the pattern in
 `docs/adr/0014-grpc-client-wrapper-testing.md` — one test file, flat tests, all
 three concerns per method (happy path, transport error, application error).
 
+## Go version consistency
+
+Application modules (`gantry`, `flatbed`, `cradle`) must declare the same Go version.
+`loggrpc` is intentionally lower (`go 1.21`) as a library targeting broad compatibility.
+`pkg` and `proto` should match the application modules. Check with:
+
+```bash
+grep -r "^go " */go.mod
+```
+
+If any application module differs from the others, standardize before committing.
+
 ## Error mapping
 
 gRPC status codes must map to HTTP responses per `docs/adr/0002`. Verify any new

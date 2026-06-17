@@ -54,6 +54,35 @@ RETURNING id, address, created_at, updated_at;
 	return rec, nil
 }
 
+func (s *cradleServerStore) All(ctx context.Context) ([]CradleServerRecord, error) {
+	const q = `SELECT id, address, created_at, updated_at FROM cradle_servers ORDER BY created_at`
+
+	rows, err := s.db.QueryContext(ctx, q)
+	if err != nil {
+		return nil, fmt.Errorf("all cradle servers: %w", err)
+	}
+	defer rows.Close()
+
+	var recs []CradleServerRecord
+	for rows.Next() {
+		var (
+			rec       CradleServerRecord
+			createdAt int64
+			updatedAt int64
+		)
+		if err := rows.Scan(&rec.ID, &rec.Address, &createdAt, &updatedAt); err != nil {
+			return nil, fmt.Errorf("all cradle servers: scan: %w", err)
+		}
+		rec.CreatedAt = time.UnixMicro(createdAt).UTC()
+		rec.UpdatedAt = time.UnixMicro(updatedAt).UTC()
+		recs = append(recs, rec)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("all cradle servers: rows: %w", err)
+	}
+	return recs, nil
+}
+
 func (s *cradleServerStore) SelectForUpload(ctx context.Context) (CradleServerRecord, error) {
 	const selectCradleServer = `SELECT id, address, created_at, updated_at FROM cradle_servers LIMIT 1`
 

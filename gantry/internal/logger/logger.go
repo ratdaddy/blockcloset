@@ -12,9 +12,9 @@ import (
 func Init() {
 	var handler slog.Handler
 	if config.LogFormat == config.LogPretty {
-		handler = tint.NewHandler(os.Stdout, &tint.Options{})
+		handler = tint.NewHandler(os.Stdout, &tint.Options{Level: config.LogLevel})
 	} else {
-		handler = slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{})
+		handler = slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: config.LogLevel})
 	}
 
 	logger := slog.New(handler)

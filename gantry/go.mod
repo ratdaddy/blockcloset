@@ -1,6 +1,6 @@
 module github.com/ratdaddy/blockcloset/gantry
 
-go 1.24.6
+go 1.25.0
 
 require (
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.2

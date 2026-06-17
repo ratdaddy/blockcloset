@@ -2,10 +2,12 @@ package config
 
 import (
 	"flag"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type envVal string
@@ -32,14 +34,16 @@ const (
 )
 
 var (
-	AppEnv           envVal
-	LogFormat        logFormatVal
-	LogVerbosity     logVerbosityVal
-	EnableReflection bool
-	GantryPort       int
-	DatabasePath     string
-	CradleServerID   string
-	CradleAddr       string
+	AppEnv            envVal
+	LogFormat         logFormatVal
+	LogVerbosity      logVerbosityVal
+	EnableReflection  bool
+	GantryPort        int
+	DatabasePath      string
+	CradleServerID    string
+	CradleAddr        string
+	HeartbeatInterval time.Duration
+	LogLevel          slog.Level
 )
 
 func Init() {
@@ -99,6 +103,27 @@ func Init() {
 
 	if v := strings.TrimSpace(os.Getenv("GANTRY_CRADLE_ADDR")); v != "" {
 		CradleAddr = v
+	}
+
+	HeartbeatInterval = 30 * time.Second
+	if v := strings.TrimSpace(os.Getenv("GANTRY_HEARTBEAT_INTERVAL")); v != "" {
+		if d, err := time.ParseDuration(v); err == nil {
+			HeartbeatInterval = d
+		}
+	}
+
+	LogLevel = slog.LevelInfo
+	if v := strings.ToLower(strings.TrimSpace(os.Getenv("LOG_LEVEL"))); v != "" {
+		switch v {
+		case "debug":
+			LogLevel = slog.LevelDebug
+		case "info":
+			LogLevel = slog.LevelInfo
+		case "warn":
+			LogLevel = slog.LevelWarn
+		case "error":
+			LogLevel = slog.LevelError
+		}
 	}
 
 	DatabasePath = resolveDatabasePath()

@@ -15,6 +15,7 @@ type BucketStore interface {
 type CradleServerStore interface {
 	Upsert(ctx context.Context, id string, address string, createdAt time.Time) (CradleServerRecord, error)
 	SelectForUpload(ctx context.Context) (CradleServerRecord, error)
+	All(ctx context.Context) ([]CradleServerRecord, error)
 }
 
 type ObjectStore interface {

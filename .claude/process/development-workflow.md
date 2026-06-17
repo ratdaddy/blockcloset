@@ -83,21 +83,39 @@ In Progress
 [What must exist before this plan can start, if anything.]
 
 ## Cycles
-- **Cycle 1 (done):** [one-line description]
-- **Cycle 2 (done):** [one-line description]
+- **Cycle 1 (complete):** [one-line description]
+- **Cycle 2 (complete):** [one-line description]
 - **Cycle 3 (in progress):** [one-line description]
 - **Cycle 4:** [one-line description]
 
+## Cycle 3 (in progress): [description]
+
+[Expanded cycle detail goes here, written just before work starts.]
+
 ## Deferred Hardening
 - [item]
+
+---
+
+## Completed Cycles
+
+### Cycle 1: [description]
+
+[Preserved detail from when this cycle was active.]
+
+### Cycle 2: [description]
+
+[Preserved detail from when this cycle was active.]
 ```
 
 ## Cycle Format (Tier 3)
 
 Expand only the cycle currently being worked. Write this just before starting, not upfront.
+Place the expanded detail immediately after the Cycles list. When the cycle is complete,
+move its detail to the "Completed Cycles" section at the bottom.
 
 ```markdown
-## Cycle N: [description]
+## Cycle N (in progress): [description]
 
 **Red:** [Which test file, which case name, which assertion to add.]
 Expected failure: `[exact failure — compile error / "want error got nil" / assertion message]`

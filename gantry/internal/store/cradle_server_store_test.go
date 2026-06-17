@@ -166,6 +166,77 @@ func TestCradleServerStore_SelectForUpload(t *testing.T) {
 	}
 }
 
+func TestCradleServerStore_All(t *testing.T) {
+	t.Parallel()
+
+	type seed struct {
+		id      string
+		address string
+	}
+
+	type tc struct {
+		name      string
+		seeds     []seed
+		wantCount int
+	}
+
+	cases := []tc{
+		{
+			name: "returns all registered servers",
+			seeds: []seed{
+				{id: "cradle-1", address: "127.0.0.1:9001"},
+				{id: "cradle-2", address: "127.0.0.1:9002"},
+			},
+			wantCount: 2,
+		},
+		{
+			name:      "empty table returns empty slice",
+			seeds:     nil,
+			wantCount: 0,
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+
+			ctx := context.Background()
+			db := openIsolatedDB(t)
+			s := store.NewCradleServerStore(db)
+			now := time.Now().UTC()
+
+			for _, seed := range c.seeds {
+				if _, err := s.Upsert(ctx, seed.id, seed.address, now); err != nil {
+					t.Fatalf("seed upsert %q: %v", seed.address, err)
+				}
+			}
+
+			recs, err := s.All(ctx)
+			if err != nil {
+				t.Fatalf("All: unexpected error: %v", err)
+			}
+
+			if len(recs) != c.wantCount {
+				t.Fatalf("All: got %d records, want %d", len(recs), c.wantCount)
+			}
+
+			byID := make(map[string]store.CradleServerRecord, len(recs))
+			for _, r := range recs {
+				byID[r.ID] = r
+			}
+			for _, seed := range c.seeds {
+				r, ok := byID[seed.id]
+				if !ok {
+					t.Fatalf("All: no record with id %q", seed.id)
+				}
+				if r.Address != seed.address {
+					t.Fatalf("All: record %q address: got %q, want %q", seed.id, r.Address, seed.address)
+				}
+			}
+		})
+	}
+}
+
 func assertCradleServerRow(t *testing.T, ctx context.Context, db *sql.DB, address string, wantID string, wantCreated time.Time, wantUpdated time.Time) {
 	t.Helper()
 
