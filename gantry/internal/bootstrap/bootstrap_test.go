@@ -23,11 +23,11 @@ func TestInitSeedsCradleServer(t *testing.T) {
 		t.Fatalf("Init: unexpected error: %v", err)
 	}
 
-	if cradle.CallCount() != 1 {
-		t.Fatalf("Upsert calls: got %d want 1", cradle.CallCount())
+	if cradle.UpsertCallCount() != 1 {
+		t.Fatalf("Upsert calls: got %d want 1", cradle.UpsertCallCount())
 	}
 
-	calls := cradle.Calls()
+	calls := cradle.UpsertCalls()
 	call := calls[0]
 
 	if call.Address != config.CradleAddr {

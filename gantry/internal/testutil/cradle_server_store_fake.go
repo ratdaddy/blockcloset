@@ -20,6 +20,9 @@ type CradleStoreFake struct {
 	mu                       sync.Mutex
 	upsertErr                error
 	upsertCalls              []CradleUpsertCall
+	allResponse              []store.CradleServerRecord
+	allErr                   error
+	allCallCount             int
 	selectForUploadResponse  store.CradleServerRecord
 	selectForUploadErr       error
 	selectForUploadCallCount int
@@ -62,7 +65,7 @@ func (f *CradleStoreFake) Upsert(ctx context.Context, id string, address string,
 	return store.CradleServerRecord{ID: id, Address: address, CreatedAt: stamp, UpdatedAt: stamp}, nil
 }
 
-func (f *CradleStoreFake) Calls() []CradleUpsertCall {
+func (f *CradleStoreFake) UpsertCalls() []CradleUpsertCall {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
@@ -71,10 +74,43 @@ func (f *CradleStoreFake) Calls() []CradleUpsertCall {
 	return calls
 }
 
-func (f *CradleStoreFake) CallCount() int {
+func (f *CradleStoreFake) UpsertCallCount() int {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	return len(f.upsertCalls)
+}
+
+func (f *CradleStoreFake) SetAllResponse(recs []store.CradleServerRecord) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.allResponse = append([]store.CradleServerRecord(nil), recs...)
+}
+
+func (f *CradleStoreFake) SetAllError(err error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.allErr = err
+}
+
+func (f *CradleStoreFake) All(ctx context.Context) ([]store.CradleServerRecord, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+
+	f.allCallCount++
+
+	if f.allErr != nil {
+		return nil, f.allErr
+	}
+
+	recs := make([]store.CradleServerRecord, len(f.allResponse))
+	copy(recs, f.allResponse)
+	return recs, nil
+}
+
+func (f *CradleStoreFake) AllCallCount() int {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return f.allCallCount
 }
 
 func (f *CradleStoreFake) SelectForUpload(ctx context.Context) (store.CradleServerRecord, error) {

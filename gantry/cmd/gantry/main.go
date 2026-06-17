@@ -16,8 +16,10 @@ import (
 
 	"github.com/ratdaddy/blockcloset/gantry/internal/bootstrap"
 	"github.com/ratdaddy/blockcloset/gantry/internal/config"
+	"github.com/ratdaddy/blockcloset/gantry/internal/cradle"
 	"github.com/ratdaddy/blockcloset/gantry/internal/database"
 	"github.com/ratdaddy/blockcloset/gantry/internal/grpcsvc"
+	"github.com/ratdaddy/blockcloset/gantry/internal/heartbeat"
 	"github.com/ratdaddy/blockcloset/gantry/internal/logger"
 	"github.com/ratdaddy/blockcloset/gantry/internal/store"
 	"github.com/ratdaddy/blockcloset/loggrpc"
@@ -41,6 +43,29 @@ func main() {
 		slog.Error("bootstrap init failed", "err", err)
 		os.Exit(1)
 	}
+
+	servers, err := store.New(db).CradleServers().All(ctx)
+	if err != nil {
+		slog.Error("load cradle servers", "err", err)
+		os.Exit(1)
+	}
+	if len(servers) == 0 {
+		slog.Warn("no cradle servers registered; uploads unavailable until servers are added")
+	}
+
+	var cradleClients []heartbeat.CradleClient
+	for _, srv := range servers {
+		c, err := cradle.New(ctx, srv.Address)
+		if err != nil {
+			slog.Error("cradle client init", "addr", srv.Address, "err", err)
+			os.Exit(1)
+		}
+		defer c.Close()
+		cradleClients = append(cradleClients, c)
+	}
+
+	worker := heartbeat.New(cradleClients, config.HeartbeatInterval)
+	go worker.Run(ctx)
 
 	addr := fmt.Sprintf(":%d", config.GantryPort)
 

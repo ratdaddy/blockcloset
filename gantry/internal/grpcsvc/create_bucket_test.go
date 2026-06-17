@@ -165,7 +165,7 @@ func assertStoreCreateCalled(t *testing.T, buckets *testutil.BucketStoreFake, wa
 		t.Fatal("bucket store fake not provided")
 	}
 
-	calls := buckets.Calls()
+	calls := buckets.CreateCalls()
 	if len(calls) != 1 {
 		t.Fatalf("bucket store calls: got %d, want 1 (calls=%v)", len(calls), calls)
 	}
@@ -193,7 +193,7 @@ func assertStoreNotCalled(t *testing.T, buckets *testutil.BucketStoreFake) {
 		t.Fatal("bucket store fake not provided")
 	}
 
-	if calls := buckets.Calls(); len(calls) != 0 {
+	if calls := buckets.CreateCalls(); len(calls) != 0 {
 		t.Fatalf("bucket store calls: got %d, want 0 (calls=%v)", len(calls), calls)
 	}
 }

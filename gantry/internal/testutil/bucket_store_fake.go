@@ -129,7 +129,7 @@ func (f *BucketStoreFake) GetByNameCalls() []string {
 	return calls
 }
 
-func (f *BucketStoreFake) Calls() []BucketCreateCall {
+func (f *BucketStoreFake) CreateCalls() []BucketCreateCall {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 

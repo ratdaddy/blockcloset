@@ -223,7 +223,7 @@ func TestService_PlanWrite(t *testing.T) {
 			}
 
 			if c.expectObjectCreate {
-				calls := objects.Calls()
+				calls := objects.CreatePendingCalls()
 				if len(calls) != 1 {
 					t.Fatalf("Objects().CreatePending calls: got %d, want 1", len(calls))
 				}
